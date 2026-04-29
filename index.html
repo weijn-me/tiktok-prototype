@@ -267,10 +267,10 @@ const CreateHome = ({ navigate }) => {
   const tabs = ['Cast','Life','Travel','Recording','Beats','Landscape','Food','AI Cast'];
 
   const aiCastTemplates = [
-    { title:'UM Graduation Story', count:'21.5K videos', clips:'12 clips', color:'linear-gradient(160deg,#0d2a1a 0%,#0a3028 50%,#061e1a 100%)', thumb:'🎓' },
-    { title:'First Day in NYC', count:'18.2K videos', clips:'10 clips', color:'linear-gradient(160deg,#10101e 0%,#1a1040 100%)', thumb:'🌆' },
-    { title:'Coffee Run with Friends', count:'9.4K videos', clips:'8 clips', color:'linear-gradient(160deg,#1a0e00 0%,#2d1800 100%)', thumb:'☕' },
-    { title:'Study Night Glow-Up', count:'6.1K videos', clips:'7 clips', color:'linear-gradient(160deg,#0a1020 0%,#101828 100%)', thumb:'📚' },
+    { title:'UM Graduation Story',   count:'21.5K videos', color:'linear-gradient(160deg,#0d2a1a,#061e1a)', thumb:'🎓', photo:'images/template 1.png' },
+    { title:'First Day in NYC',      count:'18.2K videos', color:'linear-gradient(160deg,#10101e,#1a1040)', thumb:'🌆', photo:'images/template 2.png' },
+    { title:'Coffee Run with Friends',count:'9.4K videos',  color:'linear-gradient(160deg,#1a0e00,#2d1800)', thumb:'☕' },
+    { title:'Study Night Glow-Up',   count:'6.1K videos',  color:'linear-gradient(160deg,#0a1020,#101828)', thumb:'📚', photo:'images/template 3.png' },
   ];
   const regularTemplates = [
     { title:'COLLAB BER2', count:'740.3K videos', clips:'2 clips', color:'#111', contentType:'collab' },
@@ -424,12 +424,17 @@ const CreateHome = ({ navigate }) => {
             <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:8, alignSelf:'stretch' }}>
               <div onClick={()=>{ if(isAICast && isFirst) navigate('template-detail'); }}
                 style={{ height, alignSelf:'stretch', borderRadius:12, overflow:'hidden', position:'relative', cursor:isAICast&&isFirst?'pointer':'default', border:'1px solid #212121' }}>
-                <div style={{ position:'absolute', inset:0, background:tpl.color }}/>
+                {tpl.photo
+                  ? <img src={tpl.photo} alt={tpl.title} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }}/>
+                  : <div style={{ position:'absolute', inset:0, background:tpl.color }}/>
+                }
                 {isAICast ? (
                   <>
-                    <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                      <span style={{ fontSize:48, opacity:0.25 }}>{tpl.thumb}</span>
-                    </div>
+                    {!tpl.photo && (
+                      <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                        <span style={{ fontSize:48, opacity:0.25 }}>{tpl.thumb}</span>
+                      </div>
+                    )}
                     <div style={{ position:'absolute', top:12, left:12, display:'flex', width:'80.22px', height:'27.886px', padding:'3.098px 10.844px', alignItems:'flex-start', borderRadius:8, border:'1.549px solid rgba(0,241,232,0.38)', background:'rgba(0,241,232,0.30)', boxSizing:'border-box' }}>
                       <span style={{ color:'#00f1e8', fontSize:14, fontWeight:700, lineHeight:'normal', whiteSpace:'nowrap' }}>AI Cast</span>
                     </div>
@@ -476,19 +481,18 @@ const AICastEntry = ({ navigate }) => {
       <div className="stage-bg"/>
       <div className="stage-beam"/>
       <Sparkles count={14}/>
-      {/* Avatar — absolute above input (Figma: left:16, top:655) */}
-      <div style={{ position:'absolute', left:16, top:655, zIndex:6 }}>
-        <Avatar size={42}/>
-      </div>
-      {/* Status bar + header */}
+      {/* Status bar + header — Stage style, X icon preserved */}
       <div style={{ position:'relative', zIndex:5 }}>
         <StatusBar/>
-        <div style={{ display:'flex', alignItems:'center', padding:'4px 50px 0 20px' }}>
-          <div onClick={()=>navigate('create-home')} style={{ cursor:'pointer', padding:4 }}><Icon name="x" size={22} color="#fff"/></div>
-          <div style={{ flex:1, textAlign:'center' }}>
-            <div style={{ fontWeight:700, fontSize:17, lineHeight:'22px' }}>AI Cast</div>
-            <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)', lineHeight:'15px' }}>Powered by Dreamina</div>
+        <div style={{ display:'flex', alignItems:'center', padding:'4px 16px 0' }}>
+          <div onClick={()=>navigate('create-home')} style={{ cursor:'pointer', flexShrink:0, width:24, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <Icon name="x" size={22} color="#fff"/>
           </div>
+          <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:1 }}>
+            <div style={{ fontSize:18, fontWeight:600, lineHeight:'22px' }}>Stage</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:'15px' }}>Dreamina Seedance 2.0</div>
+          </div>
+          <div style={{ width:24, flexShrink:0 }}/>
         </div>
       </div>
       {/* Center content */}
@@ -497,16 +501,21 @@ const AICastEntry = ({ navigate }) => {
           <Icon name="ai" size={30} color="#00F1E8"/>
         </div>
         <div style={{ textAlign:'center' }}>
-          <div style={{ fontWeight:700, fontSize:20, lineHeight:'26px' }}>Cast yourself and your</div>
-          <div style={{ fontWeight:700, fontSize:20, color:'#00F1E8', lineHeight:'26px' }}>friends in AI videos</div>
+          <div style={{ fontWeight:700, fontSize:20, lineHeight:'20px', color:'#F6F6F6' }}>Cast yourself and your friends</div>
+          <div style={{ fontWeight:700, fontSize:20, lineHeight:'20px', color:'#00F1E8', marginTop:8 }}>in AI videos</div>
         </div>
       </div>
       {/* Bottom input */}
       <div style={{ position:'relative', zIndex:5, padding:'0 16px 16px' }}>
+        {/* Avatar 42×42 + Username, gap:4, marginBottom:16 above input box */}
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:4, marginBottom:16 }}>
+          <Avatar size={42}/>
+          <span style={{ fontSize:12, color:'rgba(255,255,255,0.55)', fontWeight:400, lineHeight:'normal' }}>Username</span>
+        </div>
         <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:24, border:'1px solid rgba(255,255,255,0.1)', padding:1 }}>
-          {/* Top row: text input only */}
-          <div style={{ height:60, padding:14, display:'flex', alignItems:'center' }}>
-            <input value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="Describe your graduation moment…" style={{ flex:1, fontSize:14, background:'transparent', border:'none', color:'#fff' }}/>
+          {/* Top row: textarea with word wrap */}
+          <div style={{ padding:14, display:'flex', alignItems:'flex-start' }}>
+            <textarea value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="@username celebrates graduation moments together with @your friend" rows={2} style={{ flex:1, fontSize:14, background:'transparent', border:'none', color:'#fff', resize:'none', lineHeight:'1.5', wordBreak:'break-word', overflowWrap:'break-word' }}/>
           </div>
           {/* Bottom row: left icons + right actions */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 14px 14px' }}>
@@ -518,7 +527,7 @@ const AICastEntry = ({ navigate }) => {
               <div style={{ width:30,height:30,borderRadius:15,background:'rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer' }}>
                 <svg width="16" height="4" viewBox="0 0 16 4" fill="rgba(255,255,255,0.7)"><circle cx="2" cy="2" r="1.5"/><circle cx="8" cy="2" r="1.5"/><circle cx="14" cy="2" r="1.5"/></svg>
               </div>
-              <button onClick={()=>navigate('co-create-1')} style={{ background:'#00F1E8', color:'#000', fontWeight:700, fontSize:14, borderRadius:20, padding:'7px 18px', border:'none', cursor:'pointer' }}>Action!</button>
+              <button onClick={()=>navigate('co-create-1')} style={{ background:'#00F1E8', color:'#000', fontWeight:700, fontSize:14, borderRadius:20, padding:'7px 18px', border:'none', cursor:'pointer' }}>Start</button>
             </div>
           </div>
         </div>
@@ -578,8 +587,8 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
   // ── Step 1: Scene — visual carousel (Figma node 8:2)
   if (step===1) {
     const sideCards = [
-      { label:'Central Campus Lawn', grad:'linear-gradient(160deg,#0a2a40,#153a60)', emoji:'🌿' },
-      { label:'North Campus Lawn',   grad:'linear-gradient(160deg,#102010,#1a3818)', emoji:'🌳' },
+      { label:'Central Campus Lawn', grad:'linear-gradient(160deg,#0a2a40,#153a60)', emoji:'🌿', photo:'images/central campus lawn.png' },
+      { label:'North Campus Lawn',   grad:'linear-gradient(160deg,#102010,#1a3818)', emoji:'🌳', photo:'images/north campus lawn.png' },
     ];
     const handleNext = () => { setChoices(c=>({...c, place:'Hill Auditorium'})); goNext(); };
     return (
@@ -624,7 +633,12 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
           {/* Left card — visible 65px, 20px gap from center */}
           <div style={{ position:'absolute', left:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
             <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
-              <div style={{ height:148, borderRadius:12, background:sideCards[0].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideCards[0].emoji}</div>
+              <div style={{ height:148, borderRadius:12, overflow:'hidden', position:'relative', marginBottom:8 }}>
+                {sideCards[0].photo
+                  ? <img src={sideCards[0].photo} alt={sideCards[0].label} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                  : <div style={{ width:'100%', height:'100%', background:sideCards[0].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38 }}>{sideCards[0].emoji}</div>
+                }
+              </div>
               <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
                 <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
                 <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideCards[0].label}</span>
@@ -633,15 +647,15 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
           </div>
 
           {/* Center card — Hill Auditorium, selected, tilted -2° */}
-          <div style={{ position:'absolute', left:'50%', top:'46%', transform:'translate(-50%,-50%) rotate(-2deg)', width:220, zIndex:3 }}>
-            <div style={{ background:'rgba(0,241,232,0.18)', border:'1px solid #00f1e8', borderRadius:24, padding:14, backdropFilter:'blur(2px)', boxShadow:'0 8px 32px rgba(0,241,232,0.15)' }}>
-              <div style={{ height:210, borderRadius:18, background:'linear-gradient(160deg,#1a3010,#2a5020)', overflow:'hidden', position:'relative', marginBottom:14, display:'flex', alignItems:'center', justifyContent:'center', fontSize:56 }}>
-                🏛️
+          <div style={{ position:'absolute', left:'50%', top:'46%', transform:'translate(-50%,-50%)', zIndex:3 }}>
+            <div style={{ display:'inline-flex', transform:'rotate(-2deg)', padding:'24px 16px', flexDirection:'column', alignItems:'center', gap:16, borderRadius:24, border:'1px solid #00F1E8', background:'rgba(0,241,232,0.20)', backdropFilter:'blur(2px)', width:260 }}>
+              <div style={{ height:210, borderRadius:18, overflow:'hidden', position:'relative', width:'100%' }}>
+                <img src="images/hill auditorium.png" alt="Hill Auditorium" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
                 <div style={{ position:'absolute', top:14, left:14, background:'rgba(0,241,232,0.3)', border:'1.5px solid rgba(0,241,232,0.38)', borderRadius:10, padding:'4px 12px', backdropFilter:'blur(2px)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                   <span style={{ fontSize:13, fontWeight:600, color:'#00f1e8', letterSpacing:0.5 }}>78% chose this</span>
                 </div>
               </div>
-              <div style={{ display:'flex', gap:8, alignItems:'center', padding:'0 10px' }}>
+              <div style={{ display:'flex', gap:8, alignItems:'center', width:'100%' }}>
                 <div style={{ width:18, height:18, borderRadius:'50%', background:'rgba(0,241,232,0.2)', border:'1.5px solid #00f1e8', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                   <div style={{ width:7, height:7, borderRadius:'50%', background:'#00f1e8' }}/>
                 </div>
@@ -653,7 +667,12 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
           {/* Right card — visible 65px, 20px gap from center */}
           <div style={{ position:'absolute', right:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
             <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
-              <div style={{ height:148, borderRadius:12, background:sideCards[1].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideCards[1].emoji}</div>
+              <div style={{ height:148, borderRadius:12, overflow:'hidden', position:'relative', marginBottom:8 }}>
+                {sideCards[1].photo
+                  ? <img src={sideCards[1].photo} alt={sideCards[1].label} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                  : <div style={{ width:'100%', height:'100%', background:sideCards[1].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38 }}>{sideCards[1].emoji}</div>
+                }
+              </div>
               <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
                 <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
                 <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideCards[1].label}</span>
@@ -671,7 +690,7 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
         </div>
         {/* Next button — gradient, centered */}
         <div style={{ display:'flex', justifyContent:'center', padding:'0 16px 28px', position:'relative', zIndex:5 }}>
-          <button onClick={handleNext} style={{ background:'linear-gradient(64deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, padding:'12px 48px', border:'none', cursor:'pointer' }}>Next</button>
+          <button onClick={handleNext} style={{ display:'flex', width:358, padding:'12px 16px', justifyContent:'center', alignItems:'center', borderRadius:24, background:'linear-gradient(81deg,#00FCC5 0.1%,#00F1EC 99.9%)', color:'#000', fontWeight:600, fontSize:16, border:'none', cursor:'pointer' }}>Next</button>
         </div>
       </div>
     );
@@ -680,8 +699,8 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
   // ── Step 2: Storyboard — visual carousel (Figma node 12:2)
   if (step===2) {
     const sideStories = [
-      { label:'Walking across stage + applause',    grad:'linear-gradient(160deg,#1a2030,#253050)', emoji:'🎓' },
-      { label:'Group celebration + throwing caps',  grad:'linear-gradient(160deg,#1a1040,#2a1860)', emoji:'🎉' },
+      { label:'Walking across stage + applause',   grad:'linear-gradient(160deg,#1a2030,#253050)', emoji:'🎓', photo:'images/applause.png' },
+      { label:'Group celebration + throwing caps', grad:'linear-gradient(160deg,#1a1040,#2a1860)', emoji:'🎉', photo:'images/caps.png' },
     ];
     const handleNext2 = () => { setChoices(c=>({...c, story:'Photos with professors, parents & classmates'})); goNext(); };
     return (
@@ -726,23 +745,28 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
           {/* Left card */}
           <div style={{ position:'absolute', left:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
             <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
-              <div style={{ height:148, borderRadius:12, background:sideStories[0].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideStories[0].emoji}</div>
+              <div style={{ height:148, borderRadius:12, overflow:'hidden', position:'relative', marginBottom:8 }}>
+                {sideStories[0].photo
+                  ? <img src={sideStories[0].photo} alt={sideStories[0].label} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                  : <div style={{ width:'100%', height:'100%', background:sideStories[0].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38 }}>{sideStories[0].emoji}</div>
+                }
+              </div>
               <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
                 <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
                 <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideStories[0].label}</span>
               </div>
             </div>
           </div>
-          {/* Center card — selected, tilted +2deg */}
-          <div style={{ position:'absolute', left:'50%', top:'46%', transform:'translate(-50%,-50%) rotate(2deg)', width:220, zIndex:3 }}>
-            <div style={{ background:'rgba(0,241,232,0.18)', border:'1px solid #00f1e8', borderRadius:24, padding:14, backdropFilter:'blur(2px)', boxShadow:'0 8px 32px rgba(0,241,232,0.15)' }}>
-              <div style={{ height:210, borderRadius:18, background:'linear-gradient(160deg,#0d2a3a,#1a4a5c)', overflow:'hidden', position:'relative', marginBottom:14, display:'flex', alignItems:'center', justifyContent:'center', fontSize:56 }}>
-                📸
-                <div style={{ position:'absolute', top:14, left:14, background:'rgba(0,241,232,0.3)', border:'1.5px solid rgba(0,241,232,0.38)', borderRadius:10, padding:'4px 12px', backdropFilter:'blur(2px)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <span style={{ fontSize:13, fontWeight:600, color:'#00f1e8', letterSpacing:0.5 }}>Most Alumni's choice</span>
+          {/* Center card — selected, tilted +2deg (opposite to Step 1 & 3) */}
+          <div style={{ position:'absolute', left:'50%', top:'46%', transform:'translate(-50%,-50%)', zIndex:3 }}>
+            <div style={{ display:'inline-flex', transform:'rotate(2deg)', padding:'24px 16px', flexDirection:'column', alignItems:'center', gap:16, borderRadius:24, border:'1px solid #00F1E8', background:'rgba(0,241,232,0.20)', backdropFilter:'blur(2px)', width:260 }}>
+              <div style={{ height:210, borderRadius:18, overflow:'hidden', position:'relative', width:'100%' }}>
+                <img src="images/photo.png" alt="Photos with professors" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                <div style={{ position:'absolute', top:14, left:14, display:'inline-flex', padding:'4px 12px', alignItems:'center', borderRadius:12, border:'1.549px solid rgba(0,241,232,0.38)', background:'rgba(0,241,232,0.30)', backdropFilter:'blur(2px)', width:'auto' }}>
+                  <span style={{ color:'#00F1E8', fontFamily:'"TikTok Sans",-apple-system,sans-serif', fontSize:14, fontStyle:'normal', fontWeight:600, lineHeight:'normal', letterSpacing:'0.465px', whiteSpace:'nowrap' }}>Most Alumni's choice</span>
                 </div>
               </div>
-              <div style={{ display:'flex', gap:8, alignItems:'center', padding:'0 10px' }}>
+              <div style={{ display:'flex', gap:8, alignItems:'center', width:'100%' }}>
                 <div style={{ width:18, height:18, borderRadius:'50%', background:'rgba(0,241,232,0.2)', border:'1.5px solid #00f1e8', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                   <div style={{ width:7, height:7, borderRadius:'50%', background:'#00f1e8' }}/>
                 </div>
@@ -753,7 +777,12 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
           {/* Right card */}
           <div style={{ position:'absolute', right:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
             <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
-              <div style={{ height:148, borderRadius:12, background:sideStories[1].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideStories[1].emoji}</div>
+              <div style={{ height:148, borderRadius:12, overflow:'hidden', position:'relative', marginBottom:8 }}>
+                {sideStories[1].photo
+                  ? <img src={sideStories[1].photo} alt={sideStories[1].label} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                  : <div style={{ width:'100%', height:'100%', background:sideStories[1].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38 }}>{sideStories[1].emoji}</div>
+                }
+              </div>
               <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
                 <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
                 <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideStories[1].label}</span>
@@ -770,7 +799,7 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
         </div>
         {/* Next button */}
         <div style={{ display:'flex', justifyContent:'center', padding:'0 16px 28px', position:'relative', zIndex:5 }}>
-          <button onClick={handleNext2} style={{ background:'linear-gradient(64deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, padding:'12px 48px', border:'none', cursor:'pointer' }}>Next</button>
+          <button onClick={handleNext2} style={{ display:'flex', width:358, padding:'12px 16px', justifyContent:'center', alignItems:'center', borderRadius:24, background:'linear-gradient(81deg,#00FCC5 0.1%,#00F1EC 99.9%)', color:'#000', fontWeight:600, fontSize:16, border:'none', cursor:'pointer' }}>Next</button>
         </div>
       </div>
     );
@@ -779,8 +808,8 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
   // ── Step 3: Details — visual carousel (Figma node 13:2)
   if (step===3) {
     const sideDegrees = [
-      { label:"Bachelor's", grad:'linear-gradient(160deg,#1a2030,#253050)', emoji:'🎓' },
-      { label:"Doctor's",   grad:'linear-gradient(160deg,#0d1a20,#1a3040)', emoji:'🎓' },
+      { label:"Bachelor's", grad:'linear-gradient(160deg,#1a2030,#253050)', emoji:'🎓', photo:'images/bachelor.png' },
+      { label:"Doctor's",   grad:'linear-gradient(160deg,#0d1a20,#1a3040)', emoji:'🎓', photo:'images/phd.png' },
     ];
     const handleNext3 = () => { setChoices(c=>({...c, degree:"Master's"})); goNext(); };
     return (
@@ -825,7 +854,12 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
           {/* Left card — Bachelor's */}
           <div style={{ position:'absolute', left:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
             <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
-              <div style={{ height:148, borderRadius:12, background:sideDegrees[0].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideDegrees[0].emoji}</div>
+              <div style={{ height:148, borderRadius:12, overflow:'hidden', position:'relative', marginBottom:8 }}>
+                {sideDegrees[0].photo
+                  ? <img src={sideDegrees[0].photo} alt={sideDegrees[0].label} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                  : <div style={{ width:'100%', height:'100%', background:sideDegrees[0].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38 }}>{sideDegrees[0].emoji}</div>
+                }
+              </div>
               <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
                 <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
                 <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideDegrees[0].label}</span>
@@ -833,12 +867,12 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
             </div>
           </div>
           {/* Center card — Master's, white bg, tilted -2deg */}
-          <div style={{ position:'absolute', left:'50%', top:'46%', transform:'translate(-50%,-50%) rotate(-2deg)', width:220, zIndex:3 }}>
-            <div style={{ background:'rgba(0,241,232,0.18)', border:'1px solid #00f1e8', borderRadius:24, padding:14, backdropFilter:'blur(2px)', boxShadow:'0 8px 32px rgba(0,241,232,0.15)' }}>
-              <div style={{ height:210, borderRadius:18, background:'#fff', overflow:'hidden', position:'relative', marginBottom:14, display:'flex', alignItems:'center', justifyContent:'center', fontSize:80 }}>
-                🎓
+          <div style={{ position:'absolute', left:'50%', top:'46%', transform:'translate(-50%,-50%)', zIndex:3 }}>
+            <div style={{ display:'inline-flex', transform:'rotate(-2deg)', padding:'24px 16px', flexDirection:'column', alignItems:'center', gap:16, borderRadius:24, border:'1px solid #00F1E8', background:'rgba(0,241,232,0.20)', backdropFilter:'blur(2px)', width:260 }}>
+              <div style={{ height:210, borderRadius:18, overflow:'hidden', position:'relative', width:'100%' }}>
+                <img src="images/master.png" alt="Master's" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
               </div>
-              <div style={{ display:'flex', gap:8, alignItems:'center', padding:'0 10px' }}>
+              <div style={{ display:'flex', gap:8, alignItems:'center', width:'100%' }}>
                 <div style={{ width:18, height:18, borderRadius:'50%', background:'rgba(0,241,232,0.2)', border:'1.5px solid #00f1e8', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                   <div style={{ width:7, height:7, borderRadius:'50%', background:'#00f1e8' }}/>
                 </div>
@@ -849,7 +883,12 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
           {/* Right card — Doctor's */}
           <div style={{ position:'absolute', right:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
             <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
-              <div style={{ height:148, borderRadius:12, background:sideDegrees[1].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideDegrees[1].emoji}</div>
+              <div style={{ height:148, borderRadius:12, overflow:'hidden', position:'relative', marginBottom:8 }}>
+                {sideDegrees[1].photo
+                  ? <img src={sideDegrees[1].photo} alt={sideDegrees[1].label} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                  : <div style={{ width:'100%', height:'100%', background:sideDegrees[1].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38 }}>{sideDegrees[1].emoji}</div>
+                }
+              </div>
               <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
                 <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
                 <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideDegrees[1].label}</span>
@@ -866,7 +905,7 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
         </div>
         {/* Next button */}
         <div style={{ display:'flex', justifyContent:'center', padding:'0 16px 28px', position:'relative', zIndex:5 }}>
-          <button onClick={handleNext3} style={{ background:'linear-gradient(64deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, padding:'12px 48px', border:'none', cursor:'pointer' }}>Next</button>
+          <button onClick={handleNext3} style={{ display:'flex', width:358, padding:'12px 16px', justifyContent:'center', alignItems:'center', borderRadius:24, background:'linear-gradient(81deg,#00FCC5 0.1%,#00F1EC 99.9%)', color:'#000', fontWeight:600, fontSize:16, border:'none', cursor:'pointer' }}>Next</button>
         </div>
       </div>
     );
@@ -946,7 +985,7 @@ const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate 
       </div>
       {/* Action button — full-width cyan */}
       <div style={{ padding:'12px 16px 28px', position:'relative', zIndex:5 }}>
-        <button onClick={goNext} style={{ width:'100%', height:52, background:'linear-gradient(64deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:700, fontSize:16, borderRadius:28, border:'none', cursor:'pointer', letterSpacing:0.3 }}>Action !</button>
+        <button onClick={goNext} style={{ display:'flex', width:358, padding:'12px 16px', justifyContent:'center', alignItems:'center', borderRadius:24, background:'linear-gradient(81deg,#00FCC5 0.1%,#00F1EC 99.9%)', color:'#000', fontWeight:600, fontSize:16, border:'none', cursor:'pointer' }}>Action !</button>
       </div>
     </div>
   );
@@ -990,13 +1029,13 @@ const Generating = ({ navigate, choices={} }) => {
           paddingBottom:45 reserves space for avatar that extends 45px below image,
           so the next element's marginTop measures from avatar's visual bottom.     */}
       <div style={{ position:'relative', zIndex:5, width:'100%', display:'flex', justifyContent:'center', marginTop:24, paddingBottom:45, flexShrink:0 }}>
-        <div style={{ width:280, height:280, borderRadius:28, background:'#fff', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', fontSize:80, flexShrink:0 }}>
-          🏛️
+        <div style={{ borderRadius:28, overflow:'hidden', flexShrink:0 }}>
+          <img src="images/preview.png" alt="Preview" style={{ display:'block', maxWidth:358, height:'auto' }}/>
         </div>
         {/* Avatar: right:24 matches Figma (avatar right edge ≈ 24px from screen right) */}
         <div style={{ position:'absolute', right:24, bottom:0, zIndex:6 }}>
-          <div style={{ width:90, height:90, borderRadius:'50%', background:'rgba(0,241,232,0.08)', border:'2px solid rgba(0,241,232,0.42)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 20px rgba(0,241,232,0.15)' }}>
-            <Avatar size={76}/>
+          <div style={{ width:72, height:72, borderRadius:'50%', background:'rgba(0,241,232,0.08)', border:'2px solid rgba(0,241,232,0.42)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 20px rgba(0,241,232,0.15)' }}>
+            <Avatar size={60}/>
           </div>
         </div>
       </div>
@@ -1025,7 +1064,7 @@ const Generating = ({ navigate, choices={} }) => {
 
       {/* ── Button ── absolute at bottom, position unchanged */}
       <div style={{ position:'absolute', bottom:28, left:16, right:16, zIndex:5 }}>
-        <button onClick={()=>navigate('final-result',{choices})} style={{ width:'100%', height:48, background:'linear-gradient(38deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, border:'none', cursor:'pointer' }}>
+        <button onClick={()=>navigate('final-result',{choices})} style={{ display:'flex', width:358, padding:'12px 16px', justifyContent:'center', alignItems:'center', borderRadius:24, background:'linear-gradient(81deg,#00FCC5 0.1%,#00F1EC 99.9%)', color:'#000', fontWeight:600, fontSize:16, border:'none', cursor:'pointer' }}>
           Generate in drafts
         </button>
       </div>
@@ -1050,10 +1089,9 @@ const FinalResult = ({ navigate, choices={} }) => {
   return (
     <div className="screen" style={{ background:'#000', color:'#fff' }}>
 
-      {/* Video background — green graduation gradient, top:44, h:693, rounded:24 */}
-      <div style={{ position:'absolute', top:44, left:0, width:'100%', height:693, borderRadius:24, overflow:'hidden', zIndex:0,
-        background:'linear-gradient(180deg,rgb(26,58,32) 0%,rgb(45,90,48) 20%,rgb(61,112,64) 50%,rgb(42,90,53) 80%,rgb(26,58,37) 100%)' }}>
-        <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:90, opacity:0.12 }}>🎓</div>
+      {/* Video background — final.png photo, top:44, h:693, rounded:24 */}
+      <div style={{ position:'absolute', top:44, left:0, width:'100%', height:693, borderRadius:24, overflow:'hidden', zIndex:0 }}>
+        <img src="images/final.png" alt="Final result" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
       </div>
 
       {/* Status bar — black bg */}
@@ -1101,7 +1139,7 @@ const FinalResult = ({ navigate, choices={} }) => {
 
       {/* Next button — centered gradient, h:44, w:358, rounded-24, bottom:48 */}
       <div style={{ position:'absolute', bottom:48, left:0, right:0, zIndex:10, display:'flex', justifyContent:'center' }}>
-        <button onClick={()=>navigate('create-home')} style={{ width:358, height:44, background:'linear-gradient(37deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, border:'none', cursor:'pointer' }}>
+        <button onClick={()=>navigate('create-home')} style={{ display:'flex', width:358, padding:'12px 16px', justifyContent:'center', alignItems:'center', borderRadius:24, background:'linear-gradient(81deg,#00FCC5 0.1%,#00F1EC 99.9%)', color:'#000', fontWeight:600, fontSize:16, border:'none', cursor:'pointer' }}>
           Next
         </button>
       </div>
@@ -1113,10 +1151,9 @@ const FinalResult = ({ navigate, choices={} }) => {
 const TemplateDetail = ({ navigate }) => (
   <div className="screen" style={{ background:'#1a1a1a', color:'#fff' }}>
 
-    {/* Full-screen background — graduation photo placeholder */}
-    <div style={{ position:'absolute', inset:0, zIndex:0,
-      background:'linear-gradient(160deg,#1a1a22 0%,#2a2030 30%,#1a2a1a 60%,#0d1a0d 100%)' }}>
-      <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:120, opacity:0.08 }}>🎓</div>
+    {/* Full-screen background — ai cast detail.png */}
+    <div style={{ position:'absolute', inset:0, zIndex:0 }}>
+      <img src="images/ai cast detail.png" alt="AI Cast Detail" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
     </div>
 
     {/* Sparkles — top portion only (h:340px) */}
@@ -1159,7 +1196,7 @@ const TemplateDetail = ({ navigate }) => (
 
       {/* "Use this story" button — top:205 within gradient (absolute screen top: 756px) */}
       <div style={{ position:'absolute', top:205, left:16, right:16 }}>
-        <button onClick={()=>navigate('co-create-1-template')} style={{ width:'100%', height:52, background:'linear-gradient(42deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, border:'none', cursor:'pointer' }}>
+        <button onClick={()=>navigate('co-create-1-template')} style={{ display:'flex', width:358, padding:'12px 16px', justifyContent:'center', alignItems:'center', borderRadius:24, background:'linear-gradient(81deg,#00FCC5 0.1%,#00F1EC 99.9%)', color:'#000', fontWeight:600, fontSize:16, border:'none', cursor:'pointer' }}>
           Use this story
         </button>
       </div>
