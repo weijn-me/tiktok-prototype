@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTok Co-Create Mode — Prototype</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ── globals.css (anima_01) inlined ────────────────────────────────────── */
+  /* Inter loaded via Google Fonts link above (weight 400 & 700)            */
+  * { -webkit-font-smoothing: antialiased; box-sizing: border-box; }
+  button:focus-visible { outline: 2px solid #4a90e2 !important; }
+  a { text-decoration: none; }
+  /* ── style.css (anima_01) inlined ──────────────────────────────────────── */
+  .figma-sidebar {
+    position: relative; width: 154.55px; display: flex; flex-direction: column;
+  }
+  .figma-flow-label {
+    font-family: "Inter", Helvetica, sans-serif; font-weight: 700;
+    color: #ffffffb2; font-size: 13px; letter-spacing: 0.5px; line-height: 26px;
+    height: 26px; white-space: nowrap; margin-top: -1px;
+  }
+  .figma-flow-label.flow2 { margin-top: 16px; }
+  .figma-nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 2px 0; height: 28px; cursor: pointer;
+  }
+  .figma-nav-item.first { margin-top: 8px; }
+  .figma-nav-dot {
+    width: 6px; height: 6px; border-radius: 3px;
+    background: #ffffff33; flex-shrink: 0; transition: background 0.2s;
+  }
+  .figma-nav-dot.active { background: #00f1e8; }
+  .figma-nav-label {
+    font-family: "Inter", Helvetica, sans-serif; font-weight: 400;
+    color: #ffffff73; font-size: 12px; line-height: 24px;
+    white-space: nowrap; transition: color 0.2s;
+  }
+  .figma-nav-label.active { color: #00f1e8; }
+  .figma-hint-box {
+    width: 154.55px; height: 82.06px; margin-top: 24px;
+    background: #00f1e80d; border-radius: 10px; border: 1px solid #00f1e81a;
+    display: flex;
+  }
+  .figma-hint-box p {
+    margin-top: 12px; margin-left: 13px; width: 129px;
+    font-family: "Inter", Helvetica, sans-serif; font-weight: 400;
+    color: #00f1e899; font-size: 11px; line-height: 18.7px;
+  }
+  @font-face {
+    font-family: 'TikTok Sans';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_static/tiktok/webapp/main/webapp-desktop/TikTokSans-VF.woff2') format('woff2'),
+         url('https://sf16-scmcdn-va.ibytedtos.com/goofy/tiktok/web/node/_next/static/media/TikTokSans.woff2') format('woff2');
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #0d0d0d; font-family: 'TikTok Sans', -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+  :root { --cyan: #00F1E8; --bg: #080c14; --card: #111827; --card2: #1a2030; --border: rgba(255,255,255,0.08); --text: #ffffff; --muted: #8b95a8; --danger: #ff3b5c; }
+  .phone-shell {
+    width: 390px; height: 844px; border-radius: 44px;
+    background: var(--bg); overflow: hidden; position: relative;
+    box-shadow: 0 0 0 10px #1a1a1a, 0 0 0 12px #2a2a2a, 0 30px 80px rgba(0,0,0,0.8);
+    flex-shrink: 0;
+  }
+  @media (max-height: 900px) {
+    .phone-shell { transform: scale(0.88); transform-origin: center; }
+  }
+  @media (max-height: 800px) {
+    .phone-shell { transform: scale(0.78); transform-origin: center; }
+  }
+  .screen { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .slide-in { animation: slideIn 0.25s cubic-bezier(0.32,0.72,0,1) forwards; }
+  .slide-out { animation: slideOut 0.25s cubic-bezier(0.32,0.72,0,1) forwards; }
+  .slide-up { animation: slideUp 0.3s cubic-bezier(0.32,0.72,0,1) forwards; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0.5; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-30%); opacity: 0; } }
+  @keyframes slideUp { from { transform: translateY(100%); opacity: 0.5; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  @keyframes float { 0%,100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-8px) rotate(180deg); } }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes progressFill { from { width: 0%; } to { width: var(--target); } }
+  @keyframes countUp { 0% { content: '0%'; } }
+  .sparkle { position: absolute; pointer-events: none; animation: float linear infinite; }
+  .stage-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse 70% 50% at 50% -5%, rgba(0,180,220,0.22) 0%, rgba(0,120,160,0.08) 40%, transparent 70%),
+                radial-gradient(ellipse 40% 30% at 50% -2%, rgba(0,241,232,0.12) 0%, transparent 50%),
+                linear-gradient(180deg, #060d18 0%, #080c14 60%, #060a10 100%);
+  }
+  .stage-beam {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 2px; height: 60%; background: linear-gradient(180deg, rgba(0,241,232,0.6) 0%, transparent 100%);
+    filter: blur(30px); pointer-events: none;
+  }
+  input, textarea { outline: none; border: none; background: transparent; color: white; font-family: inherit; }
+  input::placeholder, textarea::placeholder { color: var(--muted); }
+  button { cursor: pointer; border: none; font-family: inherit; }
+  .scrollable { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .scrollable::-webkit-scrollbar { display: none; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    background: rgba(0,241,232,0.12); color: var(--cyan); border: 1px solid rgba(0,241,232,0.25);
+    white-space: nowrap;
+  }
+  .step-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s; }
+  .step-dot.active { background: var(--cyan); width: 18px; border-radius: 3px; }
+  .cyan-btn {
+    background: var(--cyan); color: #000; font-weight: 700; font-size: 16px;
+    border-radius: 28px; height: 52px; width: 100%; letter-spacing: 0.3px;
+    transition: opacity 0.15s; active: opacity 0.8;
+  }
+  .cyan-btn:active { opacity: 0.8; }
+  .selectable-card {
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; cursor: pointer; transition: all 0.18s; position: relative; overflow: hidden;
+  }
+  .selectable-card.selected { border-color: var(--cyan); background: rgba(0,241,232,0.06); }
+  .selectable-card.selected::before {
+    content: ''; position: absolute; inset: 0; border-radius: 14px;
+    background: radial-gradient(ellipse at 20% 50%, rgba(0,241,232,0.08) 0%, transparent 60%);
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── SVG Icons ────────────────────────────────────────────────────────────────
+const Icon = ({ name, size=20, color='currentColor', strokeWidth=1.8 }) => {
+  const paths = {
+    x: <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+    back: <polyline points="15 18 9 12 15 6"/>,
+    search: <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+    bookmark: <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>,
+    music: <><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></>,
+    plus: <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+    edit: <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
+    text: <><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></>,
+    sticker: <><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></>,
+    effects: <><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></>,
+    filter: <><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></>,
+    mic: <><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></>,
+    caption: <><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></>,
+    settings: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+    check: <><polyline points="20 6 9 17 4 12"/></>,
+    ai: <><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></>,
+    camera: <><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></>,
+    video: <><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></>,
+    image: <><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></>,
+    scissors: <><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></>,
+    wand: <><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19.2 13.2M17.8 6.2L19.2 4.8M12.2 6.2L10.8 4.8M12.2 11.8L10.8 13.2"/><path d="M3 21l9-9"/><path d="M12.22 3.22L15 6 18.78 9.78 16 12.56 12.22 8.78 9 12 6 9z"/></>,
+    user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+    chevDown: <polyline points="6 9 12 15 18 9"/>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+      {paths[name]}
+    </svg>
+  );
+};
+
+// ─── Sparkles Background ──────────────────────────────────────────────────────
+const Sparkles = ({ count = 12 }) => {
+  const stars = useRef(
+    Array.from({ length: count }, (_, i) => ({
+      id: i,
+      x: 10 + Math.random() * 80,
+      y: 5 + Math.random() * 85,
+      size: 4 + Math.random() * 8,
+      delay: Math.random() * 4,
+      dur: 3 + Math.random() * 3,
+      color: Math.random() > 0.5 ? 'rgba(0,241,232,0.35)' : 'rgba(255,255,255,0.15)',
+      type: Math.random() > 0.4 ? 'star' : 'cross',
+    }))
+  ).current;
+  return (
+    <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:1 }}>
+      {stars.map(s => (
+        <div key={s.id} className="sparkle" style={{
+          left:`${s.x}%`, top:`${s.y}%`,
+          animationDuration:`${s.dur}s`, animationDelay:`${s.delay}s`,
+        }}>
+          {s.type === 'star' ? (
+            <svg width={s.size} height={s.size} viewBox="0 0 24 24">
+              <polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" fill={s.color}/>
+            </svg>
+          ) : (
+            <svg width={s.size} height={s.size} viewBox="0 0 24 24">
+              <line x1="12" y1="2" x2="12" y2="22" stroke={s.color} strokeWidth="2"/>
+              <line x1="2" y1="12" x2="22" y2="12" stroke={s.color} strokeWidth="2"/>
+            </svg>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ─── Status Bar ───────────────────────────────────────────────────────────────
+const StatusBar = ({ time='18:30', light=false }) => (
+  <div style={{ display:'flex', width:'390px', height:'45px', padding:'14px 24px 4px 24px', justifyContent:'space-between', alignItems:'center', zIndex:10, position:'relative', color: light ? '#000' : '#fff' }}>
+    <span style={{ fontSize:15, fontWeight:700, letterSpacing:0.3 }}>{time}</span>
+    <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill={light?'#000':'white'}><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="3" width="3" height="9" rx="1"/><rect x="9" y="1" width="3" height="11" rx="1"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" opacity="0.4"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke={light?'#000':'white'} strokeWidth="1.5"><path d="M8 2.5C10.5 2.5 12.7 3.5 14.3 5.1L15.5 3.8C13.5 1.8 10.9 0.5 8 0.5C5.1 0.5 2.5 1.8 0.5 3.8L1.7 5.1C3.3 3.5 5.5 2.5 8 2.5Z"/><path d="M8 5.5C9.7 5.5 11.2 6.2 12.3 7.3L13.5 6C12.1 4.7 10.1 3.9 8 3.9C5.9 3.9 3.9 4.7 2.5 6L3.7 7.3C4.8 6.2 6.3 5.5 8 5.5Z"/><circle cx="8" cy="10" r="1.5" fill={light?'#000':'white'} stroke="none"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke={light?'#000':'white'} strokeOpacity="0.35"/><rect x="2" y="2" width="17" height="8" rx="2" fill={light?'#000':'white'}/><path d="M23.5 4.5v3a1.5 1.5 0 000-3z" fill={light?'#000':'white'} opacity="0.4"/></svg>
+    </div>
+  </div>
+);
+
+// ─── Bottom Nav ───────────────────────────────────────────────────────────────
+const BottomTabs = ({ active='create' }) => (
+  <div style={{ display:'flex', width:'390px', height:86, padding:'8px 0 20px 0', alignItems:'flex-start', borderTop:'1px solid rgba(255,255,255,0.07)', background:'#000', zIndex:20, boxSizing:'border-box' }}>
+    {/* Left spacer */}
+    <div style={{ flex:1 }}/>
+    {/* POST */}
+    <div style={{ paddingTop:6, cursor:'pointer', display:'flex', alignItems:'center' }}>
+      <span style={{ color:'#999', textAlign:'center', fontFamily:'"TikTok Sans",-apple-system,sans-serif', fontSize:14, fontStyle:'normal', fontWeight:500, lineHeight:'normal', letterSpacing:'1px' }}>POST</span>
+    </div>
+    {/* 24px gap between POST and CREATE */}
+    <div style={{ width:24 }}/>
+    {/* CREATE — centered on page via symmetric spacers, no underline */}
+    <div style={{ paddingTop:6, cursor:'pointer', display:'flex', alignItems:'center' }}>
+      <span style={{ color:'#fff', textAlign:'center', fontFamily:'"TikTok Sans",-apple-system,sans-serif', fontSize:14, fontStyle:'normal', fontWeight:700, lineHeight:'normal', letterSpacing:'1px' }}>CREATE</span>
+    </div>
+    {/* Right spacer = left spacer + POST width + 8px gap → CREATE centered */}
+    <div style={{ flex:1 }}/>
+  </div>
+);
+
+// ─── AI Tool Icons Row ────────────────────────────────────────────────────────
+const AIToolIcon = ({ icon, label, onClick, highlight }) => (
+  <div onClick={onClick} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, cursor:'pointer', flexShrink:0, minWidth:58 }}>
+    <div style={{ width:48, height:48, borderRadius:14, background: highlight ? 'rgba(0,241,232,0.15)' : 'rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'center', border: highlight ? '1.5px solid rgba(0,241,232,0.4)':'1px solid rgba(255,255,255,0.08)', transition:'all 0.2s' }}>
+      {icon}
+    </div>
+    <span style={{ fontSize:10, color: highlight ? 'var(--cyan)' : '#aaa', fontWeight:500, textAlign:'center', lineHeight:1.2 }}>{label}</span>
+  </div>
+);
+
+// ─── User Avatar ──────────────────────────────────────────────────────────────
+const Avatar = ({ size=44, src }) => (
+  <div style={{ width:size, height:size, borderRadius:'50%', background:'linear-gradient(135deg,#667eea,#764ba2)', overflow:'hidden', border:'2px solid rgba(255,255,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+    <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <svg width={size*0.5} height={size*0.5} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Screen 1: Create Home ────────────────────────────────────────────────────
+const CreateHome = ({ navigate }) => {
+  const [activeTab, setActiveTab] = useState('Cast');
+  const tabs = ['Cast','Life','Travel','Recording','Beats','Landscape','Food','AI Cast'];
+
+  const aiCastTemplates = [
+    { title:'UM Graduation Story', count:'21.5K videos', clips:'12 clips', color:'linear-gradient(160deg,#0d2a1a 0%,#0a3028 50%,#061e1a 100%)', thumb:'🎓' },
+    { title:'First Day in NYC', count:'18.2K videos', clips:'10 clips', color:'linear-gradient(160deg,#10101e 0%,#1a1040 100%)', thumb:'🌆' },
+    { title:'Coffee Run with Friends', count:'9.4K videos', clips:'8 clips', color:'linear-gradient(160deg,#1a0e00 0%,#2d1800 100%)', thumb:'☕' },
+    { title:'Study Night Glow-Up', count:'6.1K videos', clips:'7 clips', color:'linear-gradient(160deg,#0a1020 0%,#101828 100%)', thumb:'📚' },
+  ];
+  const regularTemplates = [
+    { title:'COLLAB BER2', count:'740.3K videos', clips:'2 clips', color:'#111', contentType:'collab' },
+    { title:'Celebrations 🥳', count:'55.9K videos', clips:'8 clips', color:'linear-gradient(160deg,#0d0018,#1a0032)', contentType:'party' },
+    { title:'Vibe Check', count:'320K videos', clips:'5 clips', color:'linear-gradient(160deg,#001020,#002040)', contentType:'vibe' },
+    { title:'Golden Hour', count:'140K videos', clips:'6 clips', color:'linear-gradient(160deg,#1a0e00,#2d1c00)', contentType:'golden' },
+  ];
+
+  const displayTemplates = (activeTab === 'AI Cast' || activeTab === 'Cast') ? aiCastTemplates : regularTemplates;
+
+  // Inline SVG icons matching TikTok reference style
+  const ToolIcons = [
+    { label:'AI Cast', onClick:()=>navigate('ai-cast-entry'), svg:(
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="10" stroke="white" strokeWidth="1.8"/>
+        <circle cx="14" cy="14" r="5" fill="white"/>
+        <circle cx="21" cy="7" r="3.5" fill="#00F1E8"/>
+        <path d="M19 7.5L23 7.5" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+        <path d="M21 5.5L21 9.5" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label:'AI Video', svg:(
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="2" y="7" width="16" height="14" rx="3" stroke="white" strokeWidth="1.8"/>
+        <path d="M18 11L26 8V20L18 17V11Z" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
+      </svg>
+    )},
+    { label:'AI Image', svg:(
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="3" y="5" width="18" height="18" rx="3" stroke="white" strokeWidth="1.8"/>
+        <path d="M3 17L9 11L13 15L17 11L21 17" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
+        <circle cx="8.5" cy="10" r="1.5" fill="white"/>
+        <path d="M20 4L24 8M24 4L20 8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label:'Photo editor', svg:(
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M14 3C8 3 3 8 3 14s5 11 11 11 11-5 11-11S20 3 14 3z" stroke="white" strokeWidth="1.8"/>
+        <path d="M14 8v6l4 2" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M3 14h3M22 14h3M14 3v3M14 22v3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label:'AutoCut', svg:(
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <circle cx="7" cy="7" r="3" stroke="white" strokeWidth="1.8"/>
+        <circle cx="7" cy="21" r="3" stroke="white" strokeWidth="1.8"/>
+        <line x1="10" y1="7" x2="25" y2="20" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+        <line x1="10" y1="21" x2="25" y2="8" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label:'Captions', svg:(
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="3" y="7" width="22" height="14" rx="3" stroke="white" strokeWidth="1.8"/>
+        <line x1="7" y1="12" x2="15" y2="12" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+        <line x1="7" y1="16" x2="21" y2="16" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label:'Cutout', svg:(
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M14 4C9 4 5 8 5 13c0 3 1.5 5.5 4 7l5 4 5-4c2.5-1.5 4-4 4-7 0-5-4-9-9-9z" stroke="white" strokeWidth="1.8"/>
+        <path d="M10 13c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4z" stroke="white" strokeWidth="1.5"/>
+      </svg>
+    )},
+  ];
+
+  return (
+    <div className="screen" style={{ background:'#000', color:'#fff' }}>
+      <StatusBar/>
+      {/* Header row */}
+      <div style={{ display:'flex', width:'390px', padding:'0 52px 0 16px', alignItems:'center', marginTop:'17px' }}>
+        <div style={{ width:36, height:36, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div style={{ flex:1, textAlign:'center', fontSize:24, fontWeight:700, letterSpacing:1.5 }}>CREATE</div>
+      </div>
+
+      {/* AI Tool Icons row — 8px below CREATE, Figma CSS: display:flex width:390px padding:0 4px gap:4px */}
+      <div style={{ position:'relative', marginTop:8, flexShrink:0 }}>
+        {/* Scrollable row */}
+        <div style={{ display:'flex', width:'390px', padding:'0 4px', alignItems:'center', gap:4, overflowX:'auto', paddingBottom:10 }} className="scrollable">
+          {ToolIcons.map((t,i) => (
+            <div key={i} onClick={t.onClick} style={{ display:'flex', width:64, height:64, padding:'12px 8px', flexDirection:'column', alignItems:'center', gap:8, flexShrink:0, cursor:'pointer' }}>
+              {t.svg}
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.85)', fontWeight:400, textAlign:'center', lineHeight:1.2, whiteSpace:'nowrap' }}>{t.label}</span>
+            </div>
+          ))}
+        </div>
+        {/* Right-edge scroll hint: transparent → black gradient */}
+        <div style={{ position:'absolute', top:0, right:0, bottom:10, width:64, background:'linear-gradient(to right, rgba(0,0,0,0), #000)', pointerEvents:'none', zIndex:2 }}/>
+      </div>
+
+      {/* New Video + Drafts — 12px below icon row, Figma: display:flex width:390 padding:0 12px gap:8 align-items:flex-start */}
+      <div style={{ display:'flex', width:'390px', padding:'0 12px', alignItems:'flex-start', gap:8, marginTop:12, flexShrink:0 }}>
+        {/* New video — Figma: height:84 padding:16px 68px flex-col center gap:4 flex:1 0 0 */}
+        <div style={{ display:'flex', height:84, padding:'16px 68px', flexDirection:'column', alignItems:'center', gap:4, flex:'1 0 0',
+          borderRadius:8, background:'linear-gradient(133deg,#FFEEE5 11.25%,#E7FDFE 88.75%)', cursor:'default' }}>
+          {/* Plus icon 24×24 */}
+          <div style={{ width:24, height:24, borderRadius:'50%', background:'#000', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </div>
+          <span style={{ fontSize:18, fontWeight:600, color:'#111', lineHeight:1, whiteSpace:'nowrap' }}>New video</span>
+        </div>
+        {/* 1 Draft — Figma: width:88 padding:16px 0 flex-col justify-center center gap:4 flex-shrink:0 align-self:stretch */}
+        <div style={{ display:'flex', width:88, padding:'16px 0', flexDirection:'column', justifyContent:'center', alignItems:'center', gap:4,
+          flexShrink:0, alignSelf:'stretch', borderRadius:8, border:'1px solid #212121',
+          background:'linear-gradient(161deg,#1a1a22 8.5%,#0e0e16 91.5%)', cursor:'pointer', position:'relative', overflow:'hidden' }}>
+          <span style={{ fontSize:20, fontWeight:800, color:'#fff', lineHeight:1 }}>1</span>
+          <span style={{ fontSize:18, fontWeight:500, color:'rgba(255,255,255,0.7)', lineHeight:1 }}>Drafts</span>
+        </div>
+      </div>
+
+      {/* Templates header — Figma: display:flex width:390 padding:0 16px justify-between align-center, 20px below New Video row */}
+      <div style={{ width:'390px', display:'flex', padding:'0 16px', justifyContent:'space-between', alignItems:'center', flexShrink:0, marginTop:20 }}>
+        <span style={{ width:94, color:'#fff', fontFamily:'"TikTok Sans",-apple-system,sans-serif', fontSize:20, fontStyle:'normal', fontWeight:500, lineHeight:'normal' }}>Templates</span>
+        <div style={{ display:'flex', width:34, height:34, padding:'0 9px', justifyContent:'center', alignItems:'center', flexShrink:0, borderRadius:17, background:'rgba(255,255,255,0.08)', cursor:'pointer' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+      </div>
+
+      {/* Template Tabs — Figma: display:flex width:390 height:35 padding:0 16px align-items:flex-start, 0px below Templates header */}
+      <div style={{ display:'flex', width:'390px', height:35, padding:'0 16px', alignItems:'flex-start', overflowX:'auto', borderBottom:'1px solid rgba(255,255,255,0.08)', flexShrink:0 }} className="scrollable">
+        {tabs.map(t => {
+          const isActive = activeTab === t;
+          const isCyanTab = t === 'AI Cast';
+          return (
+            <div key={t} onClick={()=>setActiveTab(t)} style={{
+              display:'flex', height:35, padding:'0 14px 10px 14px', alignItems:'flex-start',
+              flexShrink:0, cursor:'pointer',
+              borderBottom:`2px solid ${isCyanTab ? '#00f1e8' : (isActive ? '#fff' : 'transparent')}`,
+              marginBottom:'-1px', transition:'all 0.18s',
+            }}>
+              <div style={{
+                display:'flex', height:35, flexDirection:'column', justifyContent:'center', flexShrink:0,
+                fontSize:13, fontWeight:(isActive || isCyanTab) ? 700 : 400,
+                color: isCyanTab ? '#00f1e8' : (isActive ? '#fff' : '#999'),
+                whiteSpace:'nowrap',
+              }}>{t}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Template Grid — Figma: display:flex width:390 padding:0 12px justify-between align-items:flex-start */}
+      <div style={{ display:'flex', width:'390px', padding:'0 12px', justifyContent:'space-between', alignItems:'flex-start', flex:1, overflowY:'auto', marginTop:12 }} className="scrollable">
+        {/* Left column — ONE div, contains templates[0] + templates[2] stacked */}
+        {(() => {
+          const isAICast = activeTab==='AI Cast'||activeTab==='Cast';
+          const TemplateCard = ({ tpl, height, isFirst }) => (
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:8, alignSelf:'stretch' }}>
+              <div onClick={()=>{ if(isAICast && isFirst) navigate('template-detail'); }}
+                style={{ height, alignSelf:'stretch', borderRadius:12, overflow:'hidden', position:'relative', cursor:isAICast&&isFirst?'pointer':'default', border:'1px solid #212121' }}>
+                <div style={{ position:'absolute', inset:0, background:tpl.color }}/>
+                {isAICast ? (
+                  <>
+                    <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      <span style={{ fontSize:48, opacity:0.25 }}>{tpl.thumb}</span>
+                    </div>
+                    <div style={{ position:'absolute', top:12, left:12, display:'flex', width:'80.22px', height:'27.886px', padding:'3.098px 10.844px', alignItems:'flex-start', borderRadius:8, border:'1.549px solid rgba(0,241,232,0.38)', background:'rgba(0,241,232,0.30)', boxSizing:'border-box' }}>
+                      <span style={{ color:'#00f1e8', fontSize:14, fontWeight:700, lineHeight:'normal', whiteSpace:'nowrap' }}>AI Cast</span>
+                    </div>
+                    {isFirst && <div style={{ position:'absolute', inset:0, border:'1.5px solid rgba(0,241,232,0.42)', borderRadius:12, pointerEvents:'none' }}/>}
+                  </>
+                ) : (
+                  <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    <span style={{ fontSize:36, opacity:0.3 }}>🎬</span>
+                  </div>
+                )}
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', alignSelf:'stretch' }}>
+                <div style={{ width:'159.568px', color:'#fff', fontFamily:'"TikTok Sans",-apple-system,sans-serif', fontSize:14, fontStyle:'normal', fontWeight:500, lineHeight:'22.154px' }}>{tpl.title}</div>
+                <div style={{ width:'159.568px', color:'rgba(255,255,255,0.55)', fontFamily:'"TikTok Sans",-apple-system,sans-serif', fontSize:12, fontStyle:'normal', fontWeight:400, lineHeight:'normal' }}>{tpl.count}</div>
+              </div>
+            </div>
+          );
+          return (
+            <>
+              {/* Left column: templates 0 & 2, card height 311 */}
+              <div style={{ display:'flex', width:179, flexDirection:'column', alignItems:'flex-start', gap:16, flexShrink:0 }}>
+                {displayTemplates[0] && <TemplateCard tpl={displayTemplates[0]} height={311} isFirst={true}/>}
+                {displayTemplates[2] && <TemplateCard tpl={displayTemplates[2]} height={311} isFirst={false}/>}
+              </div>
+              {/* Right column: templates 1 & 3, card height 231 */}
+              <div style={{ display:'flex', width:179, flexDirection:'column', alignItems:'flex-start', gap:16, flexShrink:0 }}>
+                {displayTemplates[1] && <TemplateCard tpl={displayTemplates[1]} height={231} isFirst={false}/>}
+                {displayTemplates[3] && <TemplateCard tpl={displayTemplates[3]} height={231} isFirst={false}/>}
+              </div>
+            </>
+          );
+        })()}
+      </div>
+      <BottomTabs active="create"/>
+    </div>
+  );
+};
+
+// ─── Screen 2: AI Cast Entry ──────────────────────────────────────────────────
+const AICastEntry = ({ navigate }) => {
+  const [prompt, setPrompt] = useState('');
+  return (
+    <div className="screen" style={{ color:'#fff' }}>
+      <div className="stage-bg"/>
+      <div className="stage-beam"/>
+      <Sparkles count={14}/>
+      {/* Avatar — absolute above input (Figma: left:16, top:655) */}
+      <div style={{ position:'absolute', left:16, top:655, zIndex:6 }}>
+        <Avatar size={42}/>
+      </div>
+      {/* Status bar + header */}
+      <div style={{ position:'relative', zIndex:5 }}>
+        <StatusBar/>
+        <div style={{ display:'flex', alignItems:'center', padding:'4px 50px 0 20px' }}>
+          <div onClick={()=>navigate('create-home')} style={{ cursor:'pointer', padding:4 }}><Icon name="x" size={22} color="#fff"/></div>
+          <div style={{ flex:1, textAlign:'center' }}>
+            <div style={{ fontWeight:700, fontSize:17, lineHeight:'22px' }}>AI Cast</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)', lineHeight:'15px' }}>Powered by Dreamina</div>
+          </div>
+        </div>
+      </div>
+      {/* Center content */}
+      <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', position:'relative', zIndex:5, padding:'0 32px' }}>
+        <div style={{ width:72, height:72, borderRadius:'50%', background:'rgba(0,241,232,0.1)', border:'1px solid rgba(0,241,232,0.3)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16 }}>
+          <Icon name="ai" size={30} color="#00F1E8"/>
+        </div>
+        <div style={{ textAlign:'center' }}>
+          <div style={{ fontWeight:700, fontSize:20, lineHeight:'26px' }}>Cast yourself and your</div>
+          <div style={{ fontWeight:700, fontSize:20, color:'#00F1E8', lineHeight:'26px' }}>friends in AI videos</div>
+        </div>
+      </div>
+      {/* Bottom input */}
+      <div style={{ position:'relative', zIndex:5, padding:'0 16px 16px' }}>
+        <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:24, border:'1px solid rgba(255,255,255,0.1)', padding:1 }}>
+          {/* Top row: text input only */}
+          <div style={{ height:60, padding:14, display:'flex', alignItems:'center' }}>
+            <input value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="Describe your graduation moment…" style={{ flex:1, fontSize:14, background:'transparent', border:'none', color:'#fff' }}/>
+          </div>
+          {/* Bottom row: left icons + right actions */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 14px 14px' }}>
+            <div style={{ display:'flex', gap:12 }}>
+              <div style={{ width:30,height:30,borderRadius:15,background:'rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer' }}><span style={{ fontSize:14 }}>@</span></div>
+              <div style={{ width:30,height:30,borderRadius:15,background:'rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer' }}><Icon name="image" size={14} color="#aaa"/></div>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <div style={{ width:30,height:30,borderRadius:15,background:'rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer' }}>
+                <svg width="16" height="4" viewBox="0 0 16 4" fill="rgba(255,255,255,0.7)"><circle cx="2" cy="2" r="1.5"/><circle cx="8" cy="2" r="1.5"/><circle cx="14" cy="2" r="1.5"/></svg>
+              </div>
+              <button onClick={()=>navigate('co-create-1')} style={{ background:'#00F1E8', color:'#000', fontWeight:700, fontSize:14, borderRadius:20, padding:'7px 18px', border:'none', cursor:'pointer' }}>Action!</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Co-Create Wrapper (shared state) ────────────────────────────────────────
+const CoCreateFlow = ({ navigate, fromTemplate=false }) => {
+  const [step, setStep] = useState(1);
+  const [choices, setChoices] = useState({ place:'', story:'', degree:'Bachelor', regalia:'Black & Yellow', people:['Me'], tone:'Proud', camera:'Vlog', music:'Celebration', extra:'' });
+
+  const goNext = () => {
+    if (step < 4) setStep(s=>s+1);
+    else navigate('generating', { choices });
+  };
+  const goBack = () => {
+    if (step > 1) setStep(s=>s-1);
+    else navigate(fromTemplate ? 'template-detail' : 'ai-cast-entry');
+  };
+
+  const stepProps = { choices, setChoices, goNext, goBack, step, fromTemplate };
+  return <CoCreateStep {...stepProps}/>;
+};
+
+// ─── Co-Create Steps 1-4 ──────────────────────────────────────────────────────
+const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate }) => {
+  const promptSummary = "Celebrating UM graduation with classmates from different backgrounds.";
+
+  const StepHeader = () => (
+    <div style={{ position:'relative', zIndex:5, padding:'0 20px 0' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:12, paddingTop:4 }}>
+        <div onClick={goBack} style={{ cursor:'pointer', padding:4 }}><Icon name="back" size={22} color="#fff"/></div>
+        <div style={{ flex:1 }}/>
+        <div style={{ display:'flex', gap:6 }}>
+          {[1,2,3,4].map(i=><div key={i} className={`step-dot ${step===i?'active':''}`} style={step<i?{}:{background: step>i?'rgba(0,241,232,0.5)':undefined}}/>)}
+        </div>
+      </div>
+    </div>
+  );
+
+  const PromptBanner = () => (
+    <div style={{ margin:'12px 16px 0', background:'rgba(255,255,255,0.04)', borderRadius:10, padding:'8px 12px', border:'1px solid rgba(255,255,255,0.07)', position:'relative', zIndex:5 }}>
+      {fromTemplate && step===1 && <div style={{ fontSize:10, color:'#00F1E8', marginBottom:4, fontWeight:600 }}>Story template applied · Customize it to make it yours</div>}
+      <div style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.5 }}>"{promptSummary}"</div>
+    </div>
+  );
+
+  const SectionTitle = ({title, sub}) => (
+    <div style={{ padding:'16px 20px 12px', position:'relative', zIndex:5 }}>
+      <div style={{ fontSize:20, fontWeight:800, lineHeight:1.3 }}>{title}</div>
+      {sub && <div style={{ fontSize:13, color:'rgba(255,255,255,0.45)', marginTop:4 }}>{sub}</div>}
+    </div>
+  );
+
+  // ── Step 1: Scene — visual carousel (Figma node 8:2)
+  if (step===1) {
+    const sideCards = [
+      { label:'Central Campus Lawn', grad:'linear-gradient(160deg,#0a2a40,#153a60)', emoji:'🌿' },
+      { label:'North Campus Lawn',   grad:'linear-gradient(160deg,#102010,#1a3818)', emoji:'🌳' },
+    ];
+    const handleNext = () => { setChoices(c=>({...c, place:'Hill Auditorium'})); goNext(); };
+    return (
+      <div className="screen slide-in" style={{ color:'#fff', overflow:'hidden' }}>
+        <div className="stage-bg"/><div className="stage-beam"/><Sparkles count={10}/>
+        <StatusBar/>
+        {/* Header: back + "Stage" + subtitle — title truly centered via equal-width spacer */}
+        <div style={{ display:'flex', alignItems:'center', padding:'4px 16px 0', position:'relative', zIndex:5 }}>
+          <div onClick={goBack} style={{ cursor:'pointer', flexShrink:0, width:24 }}>
+            <Icon name="back" size={24} color="#fff"/>
+          </div>
+          <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:1 }}>
+            <div style={{ fontSize:18, fontWeight:600, lineHeight:'22px' }}>Stage</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:'15px' }}>Dreamina Seedance 2.0</div>
+          </div>
+          <div style={{ width:24, flexShrink:0 }}/>
+        </div>
+        {/* Prompt banner — frosted glass */}
+        <div style={{ margin:'12px 16px 0', backdropFilter:'blur(2px)', background:'rgba(245,246,246,0.1)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:24, padding:1, position:'relative', zIndex:5 }}>
+          <div style={{ padding:14 }}>
+            <p style={{ fontSize:16, lineHeight:1.5, color:'#f5f6f6' }}>
+              <span style={{ fontWeight:600 }}>@Myself </span>
+              <span style={{ fontWeight:300 }}>celebrating UM graduation with classmates from different backgrounds.</span>
+            </p>
+          </div>
+        </div>
+        {/* Section title + inline step dots */}
+        <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', padding:'16px 16px 12px', position:'relative', zIndex:5 }}>
+          <div>
+            <div style={{ fontSize:14, marginBottom:6 }}>
+              <span style={{ color:'#00f1e8', fontWeight:700 }}>Step 1 </span>
+              <span style={{ color:'#797a7a' }}>of 4</span>
+            </div>
+            <div style={{ fontSize:20, fontWeight:700, lineHeight:'26px' }}>Pick an iconic UM place</div>
+          </div>
+          <div style={{ display:'flex', gap:6, alignItems:'center', paddingTop:4 }}>
+            {[0,1,2,3].map(i=><div key={i} style={{ width:6, height:6, borderRadius:3, background:i===0?'#00f1e8':'rgba(255,255,255,0.2)' }}/>)}
+          </div>
+        </div>
+        {/* Carousel — phone 390px, center 220px (edges:85↔305), sides 150px gap:20px */}
+        <div style={{ position:'relative', flex:1, zIndex:5, overflow:'hidden' }}>
+          {/* Left card — visible 65px, 20px gap from center */}
+          <div style={{ position:'absolute', left:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
+            <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
+              <div style={{ height:148, borderRadius:12, background:sideCards[0].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideCards[0].emoji}</div>
+              <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
+                <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
+                <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideCards[0].label}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Center card — Hill Auditorium, selected, tilted -2° */}
+          <div style={{ position:'absolute', left:'50%', top:'46%', transform:'translate(-50%,-50%) rotate(-2deg)', width:220, zIndex:3 }}>
+            <div style={{ background:'rgba(0,241,232,0.18)', border:'1px solid #00f1e8', borderRadius:24, padding:14, backdropFilter:'blur(2px)', boxShadow:'0 8px 32px rgba(0,241,232,0.15)' }}>
+              <div style={{ height:210, borderRadius:18, background:'linear-gradient(160deg,#1a3010,#2a5020)', overflow:'hidden', position:'relative', marginBottom:14, display:'flex', alignItems:'center', justifyContent:'center', fontSize:56 }}>
+                🏛️
+                <div style={{ position:'absolute', top:14, left:14, background:'rgba(0,241,232,0.3)', border:'1.5px solid rgba(0,241,232,0.38)', borderRadius:10, padding:'4px 12px', backdropFilter:'blur(2px)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <span style={{ fontSize:13, fontWeight:600, color:'#00f1e8', letterSpacing:0.5 }}>78% chose this</span>
+                </div>
+              </div>
+              <div style={{ display:'flex', gap:8, alignItems:'center', padding:'0 10px' }}>
+                <div style={{ width:18, height:18, borderRadius:'50%', background:'rgba(0,241,232,0.2)', border:'1.5px solid #00f1e8', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <div style={{ width:7, height:7, borderRadius:'50%', background:'#00f1e8' }}/>
+                </div>
+                <span style={{ fontSize:15, color:'#f5f6f6' }}>Hill Auditorium</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right card — visible 65px, 20px gap from center */}
+          <div style={{ position:'absolute', right:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
+            <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
+              <div style={{ height:148, borderRadius:12, background:sideCards[1].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideCards[1].emoji}</div>
+              <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
+                <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
+                <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideCards[1].label}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Avatar — overlaps center card bottom-right, active glow ring */}
+          <div style={{ position:'absolute', left:258, bottom:48, textAlign:'center', transform:'rotate(3deg)', zIndex:10 }}>
+            <div style={{ borderRadius:'50%', boxShadow:'0 0 0 2.5px #00f1e8, 0 0 18px rgba(0,241,232,0.55)', display:'inline-block' }}>
+              <Avatar size={52}/>
+            </div>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:6, fontWeight:300 }}>Username</div>
+          </div>
+        </div>
+        {/* Next button — gradient, centered */}
+        <div style={{ display:'flex', justifyContent:'center', padding:'0 16px 28px', position:'relative', zIndex:5 }}>
+          <button onClick={handleNext} style={{ background:'linear-gradient(64deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, padding:'12px 48px', border:'none', cursor:'pointer' }}>Next</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Step 2: Storyboard — visual carousel (Figma node 12:2)
+  if (step===2) {
+    const sideStories = [
+      { label:'Walking across stage + applause',    grad:'linear-gradient(160deg,#1a2030,#253050)', emoji:'🎓' },
+      { label:'Group celebration + throwing caps',  grad:'linear-gradient(160deg,#1a1040,#2a1860)', emoji:'🎉' },
+    ];
+    const handleNext2 = () => { setChoices(c=>({...c, story:'Photos with professors, parents & classmates'})); goNext(); };
+    return (
+      <div className="screen slide-in" style={{ color:'#fff', overflow:'hidden' }}>
+        <div className="stage-bg"/><div className="stage-beam"/><Sparkles count={10}/>
+        <StatusBar/>
+        {/* Header — same as Step 1 */}
+        <div style={{ display:'flex', alignItems:'center', padding:'4px 16px 0', position:'relative', zIndex:5 }}>
+          <div onClick={goBack} style={{ cursor:'pointer', flexShrink:0, width:24 }}>
+            <Icon name="back" size={24} color="#fff"/>
+          </div>
+          <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:1 }}>
+            <div style={{ fontSize:18, fontWeight:600, lineHeight:'22px' }}>Stage</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:'15px' }}>Dreamina Seedance 2.0</div>
+          </div>
+          <div style={{ width:24, flexShrink:0 }}/>
+        </div>
+        {/* Prompt banner — frosted glass */}
+        <div style={{ margin:'12px 16px 0', backdropFilter:'blur(2px)', background:'rgba(245,246,246,0.1)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:24, padding:1, position:'relative', zIndex:5 }}>
+          <div style={{ padding:14 }}>
+            <p style={{ fontSize:16, lineHeight:1.5, color:'#f5f6f6' }}>
+              <span style={{ fontWeight:600 }}>@Myself </span>
+              <span style={{ fontWeight:300 }}>celebrating UM graduation with classmates from different backgrounds.</span>
+            </p>
+          </div>
+        </div>
+        {/* Section title + inline step dots (2 active) */}
+        <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', padding:'16px 16px 12px', position:'relative', zIndex:5 }}>
+          <div>
+            <div style={{ fontSize:14, marginBottom:6 }}>
+              <span style={{ color:'#00f1e8', fontWeight:700 }}>Step 2 </span>
+              <span style={{ color:'#797a7a' }}>of 4</span>
+            </div>
+            <div style={{ fontSize:20, fontWeight:700, lineHeight:'26px' }}>How your story unfolds</div>
+          </div>
+          <div style={{ display:'flex', gap:6, alignItems:'center', paddingTop:4 }}>
+            {[0,1,2,3].map(i=><div key={i} style={{ width:6, height:6, borderRadius:3, background:i<2?'#00f1e8':'rgba(255,255,255,0.2)' }}/>)}
+          </div>
+        </div>
+        {/* Carousel */}
+        <div style={{ position:'relative', flex:1, zIndex:5, overflow:'hidden' }}>
+          {/* Left card */}
+          <div style={{ position:'absolute', left:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
+            <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
+              <div style={{ height:148, borderRadius:12, background:sideStories[0].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideStories[0].emoji}</div>
+              <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
+                <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
+                <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideStories[0].label}</span>
+              </div>
+            </div>
+          </div>
+          {/* Center card — selected, tilted +2deg */}
+          <div style={{ position:'absolute', left:'50%', top:'46%', transform:'translate(-50%,-50%) rotate(2deg)', width:220, zIndex:3 }}>
+            <div style={{ background:'rgba(0,241,232,0.18)', border:'1px solid #00f1e8', borderRadius:24, padding:14, backdropFilter:'blur(2px)', boxShadow:'0 8px 32px rgba(0,241,232,0.15)' }}>
+              <div style={{ height:210, borderRadius:18, background:'linear-gradient(160deg,#0d2a3a,#1a4a5c)', overflow:'hidden', position:'relative', marginBottom:14, display:'flex', alignItems:'center', justifyContent:'center', fontSize:56 }}>
+                📸
+                <div style={{ position:'absolute', top:14, left:14, background:'rgba(0,241,232,0.3)', border:'1.5px solid rgba(0,241,232,0.38)', borderRadius:10, padding:'4px 12px', backdropFilter:'blur(2px)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <span style={{ fontSize:13, fontWeight:600, color:'#00f1e8', letterSpacing:0.5 }}>Most Alumni's choice</span>
+                </div>
+              </div>
+              <div style={{ display:'flex', gap:8, alignItems:'center', padding:'0 10px' }}>
+                <div style={{ width:18, height:18, borderRadius:'50%', background:'rgba(0,241,232,0.2)', border:'1.5px solid #00f1e8', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <div style={{ width:7, height:7, borderRadius:'50%', background:'#00f1e8' }}/>
+                </div>
+                <span style={{ fontSize:14, color:'#00f1e8', fontWeight:600, lineHeight:1.3 }}>Photos with professors, parents & classmates</span>
+              </div>
+            </div>
+          </div>
+          {/* Right card */}
+          <div style={{ position:'absolute', right:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
+            <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
+              <div style={{ height:148, borderRadius:12, background:sideStories[1].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideStories[1].emoji}</div>
+              <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
+                <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
+                <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideStories[1].label}</span>
+              </div>
+            </div>
+          </div>
+          {/* Avatar — overlaps center card bottom-right, active glow ring */}
+          <div style={{ position:'absolute', left:258, bottom:48, textAlign:'center', transform:'rotate(-3deg)', zIndex:10 }}>
+            <div style={{ borderRadius:'50%', boxShadow:'0 0 0 2.5px #00f1e8, 0 0 18px rgba(0,241,232,0.55)', display:'inline-block' }}>
+              <Avatar size={52}/>
+            </div>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:6, fontWeight:300 }}>Username</div>
+          </div>
+        </div>
+        {/* Next button */}
+        <div style={{ display:'flex', justifyContent:'center', padding:'0 16px 28px', position:'relative', zIndex:5 }}>
+          <button onClick={handleNext2} style={{ background:'linear-gradient(64deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, padding:'12px 48px', border:'none', cursor:'pointer' }}>Next</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Step 3: Details — visual carousel (Figma node 13:2)
+  if (step===3) {
+    const sideDegrees = [
+      { label:"Bachelor's", grad:'linear-gradient(160deg,#1a2030,#253050)', emoji:'🎓' },
+      { label:"Doctor's",   grad:'linear-gradient(160deg,#0d1a20,#1a3040)', emoji:'🎓' },
+    ];
+    const handleNext3 = () => { setChoices(c=>({...c, degree:"Master's"})); goNext(); };
+    return (
+      <div className="screen slide-in" style={{ color:'#fff', overflow:'hidden' }}>
+        <div className="stage-bg"/><div className="stage-beam"/><Sparkles count={10}/>
+        <StatusBar/>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', padding:'4px 16px 0', position:'relative', zIndex:5 }}>
+          <div onClick={goBack} style={{ cursor:'pointer', flexShrink:0, width:24 }}>
+            <Icon name="back" size={24} color="#fff"/>
+          </div>
+          <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:1 }}>
+            <div style={{ fontSize:18, fontWeight:600, lineHeight:'22px' }}>Stage</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:'15px' }}>Dreamina Seedance 2.0</div>
+          </div>
+          <div style={{ width:24, flexShrink:0 }}/>
+        </div>
+        {/* Prompt banner */}
+        <div style={{ margin:'12px 16px 0', backdropFilter:'blur(2px)', background:'rgba(245,246,246,0.1)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:24, padding:1, position:'relative', zIndex:5 }}>
+          <div style={{ padding:14 }}>
+            <p style={{ fontSize:16, lineHeight:1.5, color:'#f5f6f6' }}>
+              <span style={{ fontWeight:600 }}>@Myself </span>
+              <span style={{ fontWeight:300 }}>celebrating UM graduation with classmates from different backgrounds.</span>
+            </p>
+          </div>
+        </div>
+        {/* Section title + 3 active dots */}
+        <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', padding:'16px 16px 12px', position:'relative', zIndex:5 }}>
+          <div>
+            <div style={{ fontSize:14, marginBottom:6 }}>
+              <span style={{ color:'#00f1e8', fontWeight:700 }}>Step 3 </span>
+              <span style={{ color:'#797a7a' }}>of 4</span>
+            </div>
+            <div style={{ fontSize:20, fontWeight:700, lineHeight:'26px' }}>Confirm some details</div>
+          </div>
+          <div style={{ display:'flex', gap:6, alignItems:'center', paddingTop:4 }}>
+            {[0,1,2,3].map(i=><div key={i} style={{ width:6, height:6, borderRadius:3, background:i<3?'#00f1e8':'rgba(255,255,255,0.2)' }}/>)}
+          </div>
+        </div>
+        {/* Carousel */}
+        <div style={{ position:'relative', flex:1, zIndex:5, overflow:'hidden' }}>
+          {/* Left card — Bachelor's */}
+          <div style={{ position:'absolute', left:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
+            <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
+              <div style={{ height:148, borderRadius:12, background:sideDegrees[0].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideDegrees[0].emoji}</div>
+              <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
+                <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
+                <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideDegrees[0].label}</span>
+              </div>
+            </div>
+          </div>
+          {/* Center card — Master's, white bg, tilted -2deg */}
+          <div style={{ position:'absolute', left:'50%', top:'46%', transform:'translate(-50%,-50%) rotate(-2deg)', width:220, zIndex:3 }}>
+            <div style={{ background:'rgba(0,241,232,0.18)', border:'1px solid #00f1e8', borderRadius:24, padding:14, backdropFilter:'blur(2px)', boxShadow:'0 8px 32px rgba(0,241,232,0.15)' }}>
+              <div style={{ height:210, borderRadius:18, background:'#fff', overflow:'hidden', position:'relative', marginBottom:14, display:'flex', alignItems:'center', justifyContent:'center', fontSize:80 }}>
+                🎓
+              </div>
+              <div style={{ display:'flex', gap:8, alignItems:'center', padding:'0 10px' }}>
+                <div style={{ width:18, height:18, borderRadius:'50%', background:'rgba(0,241,232,0.2)', border:'1.5px solid #00f1e8', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <div style={{ width:7, height:7, borderRadius:'50%', background:'#00f1e8' }}/>
+                </div>
+                <span style={{ fontSize:15, color:'#00f1e8', fontWeight:600 }}>Master's</span>
+              </div>
+            </div>
+          </div>
+          {/* Right card — Doctor's */}
+          <div style={{ position:'absolute', right:-85, top:'50%', transform:'translateY(-52%)', width:150, opacity:0.75, zIndex:2 }}>
+            <div style={{ background:'rgba(245,246,246,0.08)', border:'0.8px solid rgba(255,255,255,0.1)', borderRadius:16, padding:10, backdropFilter:'blur(2px)' }}>
+              <div style={{ height:148, borderRadius:12, background:sideDegrees[1].grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, marginBottom:8 }}>{sideDegrees[1].emoji}</div>
+              <div style={{ display:'flex', gap:6, alignItems:'center', padding:'0 8px' }}>
+                <div style={{ width:13, height:13, borderRadius:3, border:'1.4px solid rgba(255,255,255,0.25)', flexShrink:0 }}/>
+                <span style={{ fontSize:11, color:'#f5f6f6', lineHeight:1.3 }}>{sideDegrees[1].label}</span>
+              </div>
+            </div>
+          </div>
+          {/* Avatar — overlaps center card bottom-right, active glow ring */}
+          <div style={{ position:'absolute', left:258, bottom:48, textAlign:'center', transform:'rotate(3deg)', zIndex:10 }}>
+            <div style={{ borderRadius:'50%', boxShadow:'0 0 0 2.5px #00f1e8, 0 0 18px rgba(0,241,232,0.55)', display:'inline-block' }}>
+              <Avatar size={52}/>
+            </div>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:6, fontWeight:300 }}>Username</div>
+          </div>
+        </div>
+        {/* Next button */}
+        <div style={{ display:'flex', justifyContent:'center', padding:'0 16px 28px', position:'relative', zIndex:5 }}>
+          <button onClick={handleNext3} style={{ background:'linear-gradient(64deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, padding:'12px 48px', border:'none', cursor:'pointer' }}>Next</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Step 4: Make it yours — form UI (Figma node 14:2)
+  const Pill = ({ label, selected, onClick }) => (
+    <div onClick={onClick} style={{
+      flex:'1 1 0', minWidth:0, height:35, borderRadius:20, cursor:'pointer',
+      display:'flex', alignItems:'center', justifyContent:'center',
+      background: selected ? '#00f1e8' : 'rgba(245,246,246,0.1)',
+      border: selected ? 'none' : '1px solid #474848',
+      fontSize:13, fontWeight: selected ? 700 : 400,
+      color: selected ? '#000' : '#f5f6f6',
+      transition:'all 0.18s', padding:'0 10px', overflow:'hidden',
+    }}>{label}</div>
+  );
+  const FormSection = ({ label, options, value, onChange }) => (
+    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+      <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', fontWeight:500, textTransform:'uppercase', letterSpacing:0.8 }}>{label}</div>
+      <div style={{ display:'flex', gap:12, alignItems:'center', width:'100%' }}>
+        {options.map(o => <Pill key={o} label={o} selected={value===o} onClick={()=>onChange(o)}/>)}
+      </div>
+    </div>
+  );
+  return (
+    <div className="screen slide-in" style={{ color:'#fff', overflow:'hidden' }}>
+      <div className="stage-bg"/><div className="stage-beam"/><Sparkles count={10}/>
+      <StatusBar/>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', padding:'4px 16px 0', position:'relative', zIndex:5 }}>
+        <div onClick={goBack} style={{ cursor:'pointer', flexShrink:0, width:24 }}>
+          <Icon name="back" size={24} color="#fff"/>
+        </div>
+        <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:1 }}>
+          <div style={{ fontSize:18, fontWeight:600, lineHeight:'22px' }}>Stage</div>
+          <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:'15px' }}>Dreamina Seedance 2.0</div>
+        </div>
+        <div style={{ width:24, flexShrink:0 }}/>
+      </div>
+      {/* Prompt banner */}
+      <div style={{ margin:'12px 16px 0', backdropFilter:'blur(2px)', background:'rgba(245,246,246,0.1)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:24, padding:1, position:'relative', zIndex:5 }}>
+        <div style={{ padding:14 }}>
+          <p style={{ fontSize:16, lineHeight:1.5, color:'#f5f6f6' }}>
+            <span style={{ fontWeight:600 }}>@Myself </span>
+            <span style={{ fontWeight:300 }}>celebrating UM graduation with classmates from different backgrounds.</span>
+          </p>
+        </div>
+      </div>
+      {/* Section title — all 4 dots cyan */}
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', padding:'16px 16px 12px', position:'relative', zIndex:5 }}>
+        <div>
+          <div style={{ fontSize:14, marginBottom:6 }}>
+            <span style={{ color:'#00f1e8', fontWeight:700 }}>Step 4 </span>
+            <span style={{ color:'#797a7a' }}>of 4</span>
+          </div>
+          <div style={{ fontSize:20, fontWeight:700, lineHeight:'26px' }}>Make it yours ;)</div>
+        </div>
+        <div style={{ display:'flex', gap:6, alignItems:'center', paddingTop:4 }}>
+          {[0,1,2,3].map(i=><div key={i} style={{ width:6, height:6, borderRadius:3, background:'#00f1e8' }}/>)}
+        </div>
+      </div>
+      {/* Form content */}
+      <div style={{ padding:'0 16px', flex:1, overflowY:'auto', zIndex:5, position:'relative', display:'flex', flexDirection:'column', gap:24 }} className="scrollable">
+        <FormSection label="Tone" options={['Proud','Emotional','Funny','Energetic']} value={choices.tone} onChange={v=>setChoices(c=>({...c,tone:v}))}/>
+        <FormSection label="Cam Style" options={['Vlog','Documentary','Film-like']} value={choices.camera} onChange={v=>setChoices(c=>({...c,camera:v}))}/>
+        <FormSection label="Music" options={['Celebration','Warm','Nostalgia']} value={choices.music} onChange={v=>setChoices(c=>({...c,music:v}))}/>
+        {/* Anything else — frosted glass textarea */}
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', fontWeight:500, textTransform:'uppercase', letterSpacing:0.8 }}>Anything else?</div>
+          <div style={{ backdropFilter:'blur(2px)', background:'rgba(245,246,246,0.1)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:24, padding:1 }}>
+            <div style={{ padding:14 }}>
+              <textarea value={choices.extra} onChange={e=>setChoices(c=>({...c,extra:e.target.value}))} placeholder="eg. End on a group hug, use a Golden Hour feel…" rows={4} style={{ width:'100%', background:'transparent', border:'none', fontSize:14, color:'#f5f6f6', resize:'none', lineHeight:1.5 }}/>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Action button — full-width cyan */}
+      <div style={{ padding:'12px 16px 28px', position:'relative', zIndex:5 }}>
+        <button onClick={goNext} style={{ width:'100%', height:52, background:'linear-gradient(64deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:700, fontSize:16, borderRadius:28, border:'none', cursor:'pointer', letterSpacing:0.3 }}>Action !</button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Screen 7: Generating ─────────────────────────────────────────────────────
+const Generating = ({ navigate, choices={} }) => {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(p => {
+        const next = Math.min(p + (Math.random() * 4 + 1.5), 100);
+        if (next >= 100) { clearInterval(interval); setTimeout(()=>navigate('final-result', { choices }), 600); }
+        return next;
+      });
+    }, 120);
+    return () => clearInterval(interval);
+  }, []);
+
+  const secsLeft = Math.max(0, Math.round((100 - progress) * 0.4));
+
+  return (
+    <div className="screen" style={{ color:'#fff', overflow:'hidden' }}>
+      <div className="stage-bg"/><div className="stage-beam"/><Sparkles count={16}/>
+
+      {/* StatusBar */}
+      <StatusBar/>
+
+      {/* Header — Stage + Dreamina Seedance 2.0, no back button */}
+      <div style={{ display:'flex', alignItems:'center', padding:'4px 16px 0', position:'relative', zIndex:5, flexShrink:0 }}>
+        <div style={{ width:24, flexShrink:0 }}/>
+        <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:1 }}>
+          <div style={{ fontSize:18, fontWeight:600, lineHeight:'22px' }}>Stage</div>
+          <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:'15px' }}>Dreamina Seedance 2.0</div>
+        </div>
+        <div style={{ width:24, flexShrink:0 }}/>
+      </div>
+
+      {/* ── Image preview + Avatar ─────────────────────────────────────────────
+          paddingBottom:45 reserves space for avatar that extends 45px below image,
+          so the next element's marginTop measures from avatar's visual bottom.     */}
+      <div style={{ position:'relative', zIndex:5, width:'100%', display:'flex', justifyContent:'center', marginTop:24, paddingBottom:45, flexShrink:0 }}>
+        <div style={{ width:280, height:280, borderRadius:28, background:'#fff', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', fontSize:80, flexShrink:0 }}>
+          🏛️
+        </div>
+        {/* Avatar: right:24 matches Figma (avatar right edge ≈ 24px from screen right) */}
+        <div style={{ position:'absolute', right:24, bottom:0, zIndex:6 }}>
+          <div style={{ width:90, height:90, borderRadius:'50%', background:'rgba(0,241,232,0.08)', border:'2px solid rgba(0,241,232,0.42)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 20px rgba(0,241,232,0.15)' }}>
+            <Avatar size={76}/>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Gradient % ── 40px below image+avatar block */}
+      <div style={{ marginTop:40, position:'relative', zIndex:5, alignSelf:'center', fontSize:48, fontWeight:800, letterSpacing:-2, lineHeight:'48px', background:'linear-gradient(75deg,rgb(0,252,197),rgb(0,241,236))', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', flexShrink:0 }}>
+        {Math.floor(progress)}%
+      </div>
+
+      {/* ── Progress bar ── 24px below % */}
+      <div style={{ marginTop:24, position:'relative', zIndex:5, padding:'0 24px', width:'100%', flexShrink:0 }}>
+        <div style={{ height:4, background:'rgba(255,255,255,0.08)', borderRadius:2, overflow:'hidden' }}>
+          <div style={{ height:'100%', width:`${progress}%`, background:'linear-gradient(90deg,rgb(0,252,197),rgb(0,241,236))', borderRadius:2, transition:'width 0.15s' }}/>
+        </div>
+      </div>
+
+      {/* ── "Rendering…" ── 24px below progress bar */}
+      <div style={{ marginTop:24, position:'relative', zIndex:5, fontSize:16, fontWeight:600, color:'#f5f6f6', textAlign:'center', alignSelf:'center', flexShrink:0 }}>
+        Rendering your Co-Create Cast…
+      </div>
+
+      {/* ── "Around Xs left" ── 8px below rendering text */}
+      <div style={{ marginTop:8, position:'relative', zIndex:5, fontSize:14, color:'#797a7a', textAlign:'center', alignSelf:'center', flexShrink:0 }}>
+        Around {secsLeft}s left
+      </div>
+
+      {/* ── Button ── absolute at bottom, position unchanged */}
+      <div style={{ position:'absolute', bottom:28, left:16, right:16, zIndex:5 }}>
+        <button onClick={()=>navigate('final-result',{choices})} style={{ width:'100%', height:48, background:'linear-gradient(38deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, border:'none', cursor:'pointer' }}>
+          Generate in drafts
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Screen 8: Final Video Result (Figma node 6:2) ────────────────────────────
+const FinalResult = ({ navigate, choices={} }) => {
+  const toolRail = [
+    { label:'AI Cast',    icon:'ai',      iconColor:'#fff' },
+    { label:'Edit Cast',  icon:'edit',    iconColor:'#fff' },
+    { label:'Templates',  icon:'effects', iconColor:'#fff' },
+    { label:'Text',       icon:'text',    iconColor:'#fff' },
+    { label:'Stickers',   icon:'sticker', iconColor:'#fff' },
+    { label:'Effects',    icon:'effects', iconColor:'#fff' },
+    { label:'Filters',    icon:'filter',  iconColor:'#fff' },
+    { label:'Voice',      icon:'mic',     iconColor:'#fff' },
+    { label:'Captions',   icon:'caption', iconColor:'#fff' },
+  ];
+
+  return (
+    <div className="screen" style={{ background:'#000', color:'#fff' }}>
+
+      {/* Video background — green graduation gradient, top:44, h:693, rounded:24 */}
+      <div style={{ position:'absolute', top:44, left:0, width:'100%', height:693, borderRadius:24, overflow:'hidden', zIndex:0,
+        background:'linear-gradient(180deg,rgb(26,58,32) 0%,rgb(45,90,48) 20%,rgb(61,112,64) 50%,rgb(42,90,53) 80%,rgb(26,58,37) 100%)' }}>
+        <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:90, opacity:0.12 }}>🎓</div>
+      </div>
+
+      {/* Status bar — black bg */}
+      <div style={{ position:'absolute', top:0, left:0, right:0, height:44, background:'#000', zIndex:10 }}>
+        <StatusBar/>
+      </div>
+
+      {/* Top bar — at top:57, between status bar and video */}
+      <div style={{ position:'absolute', top:57, left:0, right:0, zIndex:10, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 12px' }}>
+        {/* Back icon */}
+        <div onClick={()=>navigate('create-home')} style={{ width:36, height:36, borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
+          <Icon name="back" size={24} color="#fff"/>
+        </div>
+        {/* Music pill */}
+        <div style={{ background:'rgba(0,0,0,0.5)', height:42, borderRadius:20, display:'flex', alignItems:'center', paddingLeft:14, cursor:'pointer', flexShrink:0 }}>
+          <Icon name="music" size={18} color="#fff"/>
+          <span style={{ fontSize:14, fontWeight:700, color:'#fff', marginLeft:8, whiteSpace:'nowrap' }}>We are young...</span>
+          <div style={{ borderLeft:'1px solid rgba(230,230,230,0.2)', height:24, width:36, display:'flex', alignItems:'center', justifyContent:'center', marginLeft:8 }}>
+            <Icon name="x" size={16} color="#fff" strokeWidth={2}/>
+          </div>
+        </div>
+        {/* Settings icon */}
+        <div style={{ width:36, height:36, borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
+          <Icon name="settings" size={28} color="#fff"/>
+        </div>
+      </div>
+
+      {/* Right tool rail — label LEFT, icon RIGHT, gap:24 */}
+      <div style={{ position:'absolute', right:15, top:129, width:109, zIndex:10, display:'flex', flexDirection:'column', gap:24 }}>
+        {toolRail.map(({ label, icon, iconColor },i) => (
+          <div key={i} style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}>
+            <span style={{ fontSize:14, fontWeight:500, color:'#fff', whiteSpace:'nowrap', flex:1 }}>{label}</span>
+            <div style={{ width:28, height:28, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <Icon name={icon} size={22} color={iconColor}/>
+            </div>
+          </div>
+        ))}
+        {/* Expand chevron — pointing up */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', width:21 }}>
+          <div style={{ transform:'rotate(180deg)' }}>
+            <Icon name="chevDown" size={20} color="#fff"/>
+          </div>
+        </div>
+      </div>
+
+      {/* Next button — centered gradient, h:44, w:358, rounded-24, bottom:48 */}
+      <div style={{ position:'absolute', bottom:48, left:0, right:0, zIndex:10, display:'flex', justifyContent:'center' }}>
+        <button onClick={()=>navigate('create-home')} style={{ width:358, height:44, background:'linear-gradient(37deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, border:'none', cursor:'pointer' }}>
+          Next
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Screen 9: Template Detail (Figma node 9:2) ───────────────────────────────
+const TemplateDetail = ({ navigate }) => (
+  <div className="screen" style={{ background:'#1a1a1a', color:'#fff' }}>
+
+    {/* Full-screen background — graduation photo placeholder */}
+    <div style={{ position:'absolute', inset:0, zIndex:0,
+      background:'linear-gradient(160deg,#1a1a22 0%,#2a2030 30%,#1a2a1a 60%,#0d1a0d 100%)' }}>
+      <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:120, opacity:0.08 }}>🎓</div>
+    </div>
+
+    {/* Sparkles — top portion only (h:340px) */}
+    <div style={{ position:'absolute', top:0, left:0, width:'100%', height:340, zIndex:1, pointerEvents:'none' }}>
+      <Sparkles count={8}/>
+    </div>
+
+    {/* Status bar */}
+    <div style={{ position:'absolute', top:0, left:0, right:0, zIndex:10 }}>
+      <StatusBar/>
+    </div>
+
+    {/* Top bar — back (left) + search (right), no circles, px:20, top:64 */}
+    <div style={{ position:'absolute', top:64, left:0, right:0, zIndex:10,
+      display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px' }}>
+      <div onClick={()=>navigate('create-home')} style={{ cursor:'pointer', width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <Icon name="back" size={24} color="#fff"/>
+      </div>
+      <div style={{ cursor:'pointer', width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <Icon name="search" size={24} color="#fff"/>
+      </div>
+    </div>
+
+    {/* Bottom transparent→black gradient overlay — top:551, h:293 */}
+    <div style={{ position:'absolute', top:551, left:0, width:'100%', height:293, zIndex:5,
+      background:'linear-gradient(to bottom, rgba(0,0,0,0) 1%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.92) 70%, #000 90%)' }}>
+
+      {/* Info section — left:20, top:102 (within gradient div) */}
+      <div style={{ position:'absolute', top:102, left:20, right:20,
+        display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+          <p style={{ fontSize:20, fontWeight:500, lineHeight:'26px', color:'#fff', margin:0 }}>UM Graduation Story</p>
+          <p style={{ fontSize:16, color:'#f6f6f6', margin:0 }}>3.5K videos</p>
+          <p style={{ fontSize:14, color:'#c1c1c2', margin:0 }}>By AI Cast Stories</p>
+        </div>
+        <div style={{ width:40, height:40, display:'flex', alignItems:'flex-start', justifyContent:'center', paddingTop:5, cursor:'pointer', flexShrink:0 }}>
+          <Icon name="bookmark" size={24} color="#fff"/>
+        </div>
+      </div>
+
+      {/* "Use this story" button — top:205 within gradient (absolute screen top: 756px) */}
+      <div style={{ position:'absolute', top:205, left:16, right:16 }}>
+        <button onClick={()=>navigate('co-create-1-template')} style={{ width:'100%', height:52, background:'linear-gradient(42deg,rgb(0,252,197),rgb(0,241,236))', color:'#000', fontWeight:600, fontSize:16, borderRadius:24, border:'none', cursor:'pointer' }}>
+          Use this story
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ROOT APP
+// ═══════════════════════════════════════════════════════════════════════════════
+const App = () => {
+  const initScreen = new URLSearchParams(window.location.search).get('screen') || 'create-home';
+  const [screen, setScreen] = useState(initScreen);
+  const [screenData, setScreenData] = useState({});
+
+  const navigate = useCallback((to, data={}) => {
+    setScreenData(data);
+    setScreen(to);
+  }, []);
+
+  const renderScreen = () => {
+    switch(screen) {
+      case 'create-home':       return <CreateHome navigate={navigate}/>;
+      case 'ai-cast-entry':     return <AICastEntry navigate={navigate}/>;
+      case 'co-create-1':       return <CoCreateFlow navigate={navigate} fromTemplate={false}/>;
+      case 'co-create-1-template': return <CoCreateFlow navigate={navigate} fromTemplate={true}/>;
+      case 'generating':        return <Generating navigate={navigate} choices={screenData.choices}/>;
+      case 'final-result':      return <FinalResult navigate={navigate} choices={screenData.choices}/>;
+      case 'template-detail':   return <TemplateDetail navigate={navigate}/>;
+      default:                  return <CreateHome navigate={navigate}/>;
+    }
+  };
+
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'20px', minHeight:'100vh' }}>
+      <div style={{ display:'flex', gap:'40px', alignItems:'flex-start' }}>
+        {/* Phone */}
+        <div className="phone-shell">
+          {renderScreen()}
+        </div>
+        {/* Flow map sidebar — style.css */}
+        <div className="figma-sidebar" style={{ paddingTop:'60px' }}>
+          <div className="figma-flow-label">FLOW 1</div>
+          {[
+            ['create-home','Create Home'],
+            ['ai-cast-entry','AI Cast Entry'],
+            ['co-create-1','Co-Create Steps 1–4'],
+            ['generating','Generating…'],
+            ['final-result','Final Result'],
+          ].map(([s,l],i)=>(
+            <div key={s} onClick={()=>navigate(s)} className={`figma-nav-item${i===0?' first':''}`}>
+              <div className={`figma-nav-dot${screen===s?' active':''}`}/>
+              <span className={`figma-nav-label${screen===s?' active':''}`}>{l}</span>
+            </div>
+          ))}
+          <div className="figma-flow-label flow2">FLOW 2</div>
+          {[
+            ['template-detail','Template Detail'],
+            ['co-create-1-template','Co-Create (template)'],
+          ].map(([s,l])=>(
+            <div key={s} onClick={()=>navigate(s)} className="figma-nav-item">
+              <div className={`figma-nav-dot${screen===s?' active':''}`}/>
+              <span className={`figma-nav-label${screen===s?' active':''}`}>{l}</span>
+            </div>
+          ))}
+          <div className="figma-hint-box">
+            <p>Click any screen to jump<br/>or tap through the flows<br/>inside the phone.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
