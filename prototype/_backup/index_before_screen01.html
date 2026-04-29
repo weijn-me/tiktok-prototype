@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTok Co-Create Mode — Prototype</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+<style>
+  @font-face {
+    font-family: 'TikTok Sans';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_static/tiktok/webapp/main/webapp-desktop/TikTokSans-VF.woff2') format('woff2'),
+         url('https://sf16-scmcdn-va.ibytedtos.com/goofy/tiktok/web/node/_next/static/media/TikTokSans.woff2') format('woff2');
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #0d0d0d; font-family: 'TikTok Sans', -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+  :root { --cyan: #00F1E8; --bg: #080c14; --card: #111827; --card2: #1a2030; --border: rgba(255,255,255,0.08); --text: #ffffff; --muted: #8b95a8; --danger: #ff3b5c; }
+  .phone-shell {
+    width: 390px; height: 844px; border-radius: 44px;
+    background: var(--bg); overflow: hidden; position: relative;
+    box-shadow: 0 0 0 10px #1a1a1a, 0 0 0 12px #2a2a2a, 0 30px 80px rgba(0,0,0,0.8);
+    flex-shrink: 0;
+  }
+  @media (max-height: 900px) {
+    .phone-shell { transform: scale(0.88); transform-origin: center; }
+  }
+  @media (max-height: 800px) {
+    .phone-shell { transform: scale(0.78); transform-origin: center; }
+  }
+  .screen { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .slide-in { animation: slideIn 0.25s cubic-bezier(0.32,0.72,0,1) forwards; }
+  .slide-out { animation: slideOut 0.25s cubic-bezier(0.32,0.72,0,1) forwards; }
+  .slide-up { animation: slideUp 0.3s cubic-bezier(0.32,0.72,0,1) forwards; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0.5; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-30%); opacity: 0; } }
+  @keyframes slideUp { from { transform: translateY(100%); opacity: 0.5; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  @keyframes float { 0%,100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-8px) rotate(180deg); } }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes progressFill { from { width: 0%; } to { width: var(--target); } }
+  @keyframes countUp { 0% { content: '0%'; } }
+  .sparkle { position: absolute; pointer-events: none; animation: float linear infinite; }
+  .stage-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse 70% 50% at 50% -5%, rgba(0,180,220,0.22) 0%, rgba(0,120,160,0.08) 40%, transparent 70%),
+                radial-gradient(ellipse 40% 30% at 50% -2%, rgba(0,241,232,0.12) 0%, transparent 50%),
+                linear-gradient(180deg, #060d18 0%, #080c14 60%, #060a10 100%);
+  }
+  .stage-beam {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 2px; height: 60%; background: linear-gradient(180deg, rgba(0,241,232,0.6) 0%, transparent 100%);
+    filter: blur(30px); pointer-events: none;
+  }
+  input, textarea { outline: none; border: none; background: transparent; color: white; font-family: inherit; }
+  input::placeholder, textarea::placeholder { color: var(--muted); }
+  button { cursor: pointer; border: none; font-family: inherit; }
+  .scrollable { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .scrollable::-webkit-scrollbar { display: none; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    background: rgba(0,241,232,0.12); color: var(--cyan); border: 1px solid rgba(0,241,232,0.25);
+    white-space: nowrap;
+  }
+  .step-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s; }
+  .step-dot.active { background: var(--cyan); width: 18px; border-radius: 3px; }
+  .cyan-btn {
+    background: var(--cyan); color: #000; font-weight: 700; font-size: 16px;
+    border-radius: 28px; height: 52px; width: 100%; letter-spacing: 0.3px;
+    transition: opacity 0.15s; active: opacity 0.8;
+  }
+  .cyan-btn:active { opacity: 0.8; }
+  .selectable-card {
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; cursor: pointer; transition: all 0.18s; position: relative; overflow: hidden;
+  }
+  .selectable-card.selected { border-color: var(--cyan); background: rgba(0,241,232,0.06); }
+  .selectable-card.selected::before {
+    content: ''; position: absolute; inset: 0; border-radius: 14px;
+    background: radial-gradient(ellipse at 20% 50%, rgba(0,241,232,0.08) 0%, transparent 60%);
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── SVG Icons ────────────────────────────────────────────────────────────────
+const Icon = ({ name, size=20, color='currentColor', strokeWidth=1.8 }) => {
+  const paths = {
+    x: <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+    back: <polyline points="15 18 9 12 15 6"/>,
+    search: <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+    bookmark: <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>,
+    music: <><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></>,
+    plus: <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+    edit: <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
+    text: <><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></>,
+    sticker: <><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></>,
+    effects: <><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></>,
+    filter: <><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></>,
+    mic: <><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></>,
+    caption: <><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></>,
+    settings: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+    check: <><polyline points="20 6 9 17 4 12"/></>,
+    ai: <><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></>,
+    camera: <><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></>,
+    video: <><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></>,
+    image: <><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></>,
+    scissors: <><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></>,
+    wand: <><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19.2 13.2M17.8 6.2L19.2 4.8M12.2 6.2L10.8 4.8M12.2 11.8L10.8 13.2"/><path d="M3 21l9-9"/><path d="M12.22 3.22L15 6 18.78 9.78 16 12.56 12.22 8.78 9 12 6 9z"/></>,
+    user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+    chevDown: <polyline points="6 9 12 15 18 9"/>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+      {paths[name]}
+    </svg>
+  );
+};
+
+// ─── Sparkles Background ──────────────────────────────────────────────────────
+const Sparkles = ({ count = 12 }) => {
+  const stars = useRef(
+    Array.from({ length: count }, (_, i) => ({
+      id: i,
+      x: 10 + Math.random() * 80,
+      y: 5 + Math.random() * 85,
+      size: 4 + Math.random() * 8,
+      delay: Math.random() * 4,
+      dur: 3 + Math.random() * 3,
+      color: Math.random() > 0.5 ? 'rgba(0,241,232,0.35)' : 'rgba(255,255,255,0.15)',
+      type: Math.random() > 0.4 ? 'star' : 'cross',
+    }))
+  ).current;
+  return (
+    <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:1 }}>
+      {stars.map(s => (
+        <div key={s.id} className="sparkle" style={{
+          left:`${s.x}%`, top:`${s.y}%`,
+          animationDuration:`${s.dur}s`, animationDelay:`${s.delay}s`,
+        }}>
+          {s.type === 'star' ? (
+            <svg width={s.size} height={s.size} viewBox="0 0 24 24">
+              <polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" fill={s.color}/>
+            </svg>
+          ) : (
+            <svg width={s.size} height={s.size} viewBox="0 0 24 24">
+              <line x1="12" y1="2" x2="12" y2="22" stroke={s.color} strokeWidth="2"/>
+              <line x1="2" y1="12" x2="22" y2="12" stroke={s.color} strokeWidth="2"/>
+            </svg>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ─── Status Bar ───────────────────────────────────────────────────────────────
+const StatusBar = ({ time='18:30', light=false }) => (
+  <div style={{ display:'flex', width:'390px', height:'45px', padding:'14px 24px 4px 24px', justifyContent:'space-between', alignItems:'center', zIndex:10, position:'relative', color: light ? '#000' : '#fff' }}>
+    <span style={{ fontSize:15, fontWeight:700, letterSpacing:0.3 }}>{time}</span>
+    <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill={light?'#000':'white'}><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="3" width="3" height="9" rx="1"/><rect x="9" y="1" width="3" height="11" rx="1"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" opacity="0.4"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke={light?'#000':'white'} strokeWidth="1.5"><path d="M8 2.5C10.5 2.5 12.7 3.5 14.3 5.1L15.5 3.8C13.5 1.8 10.9 0.5 8 0.5C5.1 0.5 2.5 1.8 0.5 3.8L1.7 5.1C3.3 3.5 5.5 2.5 8 2.5Z"/><path d="M8 5.5C9.7 5.5 11.2 6.2 12.3 7.3L13.5 6C12.1 4.7 10.1 3.9 8 3.9C5.9 3.9 3.9 4.7 2.5 6L3.7 7.3C4.8 6.2 6.3 5.5 8 5.5Z"/><circle cx="8" cy="10" r="1.5" fill={light?'#000':'white'} stroke="none"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke={light?'#000':'white'} strokeOpacity="0.35"/><rect x="2" y="2" width="17" height="8" rx="2" fill={light?'#000':'white'}/><path d="M23.5 4.5v3a1.5 1.5 0 000-3z" fill={light?'#000':'white'} opacity="0.4"/></svg>
+    </div>
+  </div>
+);
+
+// ─── Bottom Nav ───────────────────────────────────────────────────────────────
+const BottomTabs = ({ active='create' }) => (
+  <div style={{ display:'flex', background:'rgba(8,12,20,0.97)', borderTop:'1px solid rgba(255,255,255,0.07)', padding:'8px 0 20px', zIndex:20 }}>
+    {['POST','CREATE'].map(t => (
+      <div key={t} style={{ flex:1, textAlign:'center', padding:'6px 0', cursor:'pointer' }}>
+        <div style={{ fontSize:12, fontWeight: active===t.toLowerCase() ? 700:500, color: active===t.toLowerCase() ? '#fff':'#666', letterSpacing:1 }}>{t}</div>
+        {active===t.toLowerCase() && <div style={{ width:24, height:2, background:'#fff', borderRadius:1, margin:'4px auto 0' }}/>}
+      </div>
+    ))}
+  </div>
+);
+
+// ─── AI Tool Icons Row ────────────────────────────────────────────────────────
+const AIToolIcon = ({ icon, label, onClick, highlight }) => (
+  <div onClick={onClick} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, cursor:'pointer', flexShrink:0, minWidth:58 }}>
+    <div style={{ width:48, height:48, borderRadius:14, background: highlight ? 'rgba(0,241,232,0.15)' : 'rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'center', border: highlight ? '1.5px solid rgba(0,241,232,0.4)':'1px solid rgba(255,255,255,0.08)', transition:'all 0.2s' }}>
+      {icon}
+    </div>
+    <span style={{ fontSize:10, color: highlight ? 'var(--cyan)' : '#aaa', fontWeight:500, textAlign:'center', lineHeight:1.2 }}>{label}</span>
+  </div>
+);
+
+// ─── User Avatar ──────────────────────────────────────────────────────────────
+const Avatar = ({ size=44, src }) => (
+  <div style={{ width:size, height:size, borderRadius:'50%', background:'linear-gradient(135deg,#667eea,#764ba2)', overflow:'hidden', border:'2px solid rgba(255,255,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+    <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <svg width={size*0.5} height={size*0.5} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Screen 1: Create Home ────────────────────────────────────────────────────
+const CreateHome = ({ navigate }) => {
+  const [activeTab, setActiveTab] = useState('Cast');
+  const tabs = ['Cast','Life','Travel','Recording','Beats','Landscape','Food','AI Cast'];
+
+  const aiCastTemplates = [
+    { title:'UM Graduation Story', count:'21.5K videos', clips:'12 clips', color:'linear-gradient(160deg,#0d2a1a 0%,#0a3028 50%,#061e1a 100%)', thumb:'🎓' },
+    { title:'First Day in NYC', count:'18.2K videos', clips:'10 clips', color:'linear-gradient(160deg,#10101e 0%,#1a1040 100%)', thumb:'🌆' },
+    { title:'Coffee Run with Friends', count:'9.4K videos', clips:'8 clips', color:'linear-gradient(160deg,#1a0e00 0%,#2d1800 100%)', thumb:'☕' },
+    { title:'Study Night Glow-Up', count:'6.1K videos', clips:'7 clips', color:'linear-gradient(160deg,#0a1020 0%,#101828 100%)', thumb:'📚' },
+  ];
+  const regularTemplates = [
+    { title:'COLLAB BER2', count:'740.3K videos', clips:'2 clips', color:'#111', contentType:'collab' },
+    { title:'Celebrations 🥳', count:'55.9K videos', clips:'8 clips', color:'linear-gradient(160deg,#0d0018,#1a0032)', contentType:'party' },
+    { title:'Vibe Check', count:'320K videos', clips:'5 clips', color:'linear-gradient(160deg,#001020,#002040)', contentType:'vibe' },
+    { title:'Golden Hour', count:'140K videos', clips:'6 clips', color:'linear-gradient(160deg,#1a0e00,#2d1c00)', contentType:'golden' },
+  ];
+
+  const displayTemplates = (activeTab === 'AI Cast' || activeTab === 'Cast') ? aiCastTemplates : regularTemplates;
+
+  // Inline SVG icons matching TikTok reference style
+  const ToolIcons = [
+    { label:'AI Cast', onClick:()=>navigate('ai-cast-entry'), svg:(
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="10" stroke="white" strokeWidth="1.8"/>
+        <circle cx="14" cy="14" r="5" fill="white"/>
+        <circle cx="21" cy="7" r="3.5" fill="#00F1E8"/>
+        <path d="M19 7.5L23 7.5" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+        <path d="M21 5.5L21 9.5" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label:'AI Video', svg:(
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <rect x="2" y="7" width="16" height="14" rx="3" stroke="white" strokeWidth="1.8"/>
+        <path d="M18 11L26 8V20L18 17V11Z" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
+      </svg>
+    )},
+    { label:'AI Image', svg:(
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <rect x="3" y="5" width="18" height="18" rx="3" stroke="white" strokeWidth="1.8"/>
+        <path d="M3 17L9 11L13 15L17 11L21 17" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
+        <circle cx="8.5" cy="10" r="1.5" fill="white"/>
+        <path d="M20 4L24 8M24 4L20 8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label:'Photo editor', svg:(
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <path d="M14 3C8 3 3 8 3 14s5 11 11 11 11-5 11-11S20 3 14 3z" stroke="white" strokeWidth="1.8"/>
+        <path d="M14 8v6l4 2" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M3 14h3M22 14h3M14 3v3M14 22v3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label:'AutoCut', svg:(
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <circle cx="7" cy="7" r="3" stroke="white" strokeWidth="1.8"/>
+        <circle cx="7" cy="21" r="3" stroke="white" strokeWidth="1.8"/>
+        <line x1="10" y1="7" x2="25" y2="20" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+        <line x1="10" y1="21" x2="25" y2="8" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label:'Captions', svg:(
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <rect x="3" y="7" width="22" height="14" rx="3" stroke="white" strokeWidth="1.8"/>
+        <line x1="7" y1="12" x2="15" y2="12" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+        <line x1="7" y1="16" x2="21" y2="16" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label:'Cutout', svg:(
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <path d="M14 4C9 4 5 8 5 13c0 3 1.5 5.5 4 7l5 4 5-4c2.5-1.5 4-4 4-7 0-5-4-9-9-9z" stroke="white" strokeWidth="1.8"/>
+        <path d="M10 13c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4z" stroke="white" strokeWidth="1.5"/>
+      </svg>
+    )},
+  ];
+
+  return (
+    <div className="screen" style={{ background:'#000', color:'#fff' }}>
+      <StatusBar/>
+      {/* Header row */}
+      <div style={{ display:'flex', width:'390px', padding:'0 52px 0 16px', alignItems:'center', marginTop:'17px' }}>
+        <div style={{ width:36, height:36, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div style={{ flex:1, textAlign:'center', fontSize:17, fontWeight:700, letterSpacing:1.5 }}>CREATE</div>
+        <div style={{ width:36 }}/>
+      </div>
+
+      {/* AI Tool Icons — no visible box backgrounds, icon + label only */}
+      <div style={{ padding:'0 6px 14px', overflowX:'auto', display:'flex', gap:2 }} className="scrollable">
+        {ToolIcons.map((t,i) => (
+          <div key={i} onClick={t.onClick} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, cursor:'pointer', padding:'0 8px', flexShrink:0, minWidth:60 }}>
+            <div style={{ width:48, height:48, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              {t.svg}
+            </div>
+            <span style={{ fontSize:10, color:'rgba(255,255,255,0.85)', fontWeight:400, textAlign:'center', lineHeight:1.2, whiteSpace:'nowrap' }}>{t.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* New Video + Drafts */}
+      <div style={{ display:'flex', gap:10, padding:'0 16px 16px' }}>
+        {/* New video — white/light card matching reference */}
+        <div style={{ flex:1, height:90, borderRadius:16, background:'linear-gradient(133deg,#FFEEE5 11.25%,#E7FDFE 88.75%)', display:'flex', alignItems:'center', justifyContent:'center', gap:10, cursor:'default' }}>
+          <div style={{ width:32, height:32, borderRadius:'50%', background:'#000', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <span style={{ fontWeight:600, fontSize:15, color:'#111' }}>New video</span>
+        </div>
+        {/* Drafts */}
+        <div style={{ width:90, height:90, borderRadius:16, background:'#111', border:'1px solid #212121', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:4, cursor:'pointer', position:'relative', overflow:'hidden' }}>
+          {/* Thumbnail fill */}
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(160deg,#1a1a22,#0e0e16)' }}/>
+          <div style={{ position:'absolute', top:8, right:0, left:0, textAlign:'center', fontSize:22, fontWeight:800, color:'#fff', zIndex:1, lineHeight:1 }}>1</div>
+          <div style={{ position:'absolute', bottom:8, left:0, right:0, textAlign:'center', fontSize:11, color:'rgba(255,255,255,0.7)', zIndex:1, fontWeight:500 }}>Drafts</div>
+        </div>
+      </div>
+
+      {/* Templates header */}
+      <div style={{ padding:'0 16px 10px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <span style={{ fontWeight:700, fontSize:16 }}>Templates</span>
+        <div style={{ width:34, height:34, borderRadius:'50%', background:'rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+      </div>
+
+      {/* Template Tabs */}
+      <div style={{ display:'flex', padding:'0 16px 0', overflowX:'auto', borderBottom:'1px solid rgba(255,255,255,0.07)' }} className="scrollable">
+        {tabs.map(t => {
+          const isActive = activeTab === t;
+          const isCyanTab = t === 'AI Cast';
+          return (
+            <div key={t} onClick={()=>setActiveTab(t)} style={{
+              flexShrink:0, padding:'6px 14px 10px', fontSize:13,
+              fontWeight: (isActive || isCyanTab) ? 700 : 400,
+              color: isCyanTab ? '#00F1E8' : (isActive ? '#fff' : '#999'),
+              borderBottom: `2.5px solid ${isCyanTab ? '#00F1E8' : (isActive ? '#fff' : 'transparent')}`,
+              cursor:'pointer', transition:'all 0.18s', whiteSpace:'nowrap',
+              marginBottom:'-1px',
+            }}>{t}</div>
+          );
+        })}
+      </div>
+
+      {/* Template Grid */}
+      <div style={{ padding:'12px 16px 0', display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, flex:1, overflowY:'auto' }} className="scrollable">
+        {displayTemplates.map((tpl,i) => (
+          <div key={i}
+            onClick={()=>{ if((activeTab==='AI Cast'||activeTab==='Cast') && i===0) navigate('template-detail'); }}
+            style={{ borderRadius:14, overflow:'hidden', cursor: (activeTab==='AI Cast'||activeTab==='Cast')&&i===0 ? 'pointer':'default', position:'relative', aspectRatio:'9/16', maxHeight:210 }}>
+            <div style={{ position:'absolute', inset:0, background:tpl.color }}/>
+            {/* AI Cast tab: show emoji + subtle cyan badge */}
+            {(activeTab==='AI Cast'||activeTab==='Cast') && (
+              <>
+                <div style={{ position:'absolute', top:0, left:0, right:0, bottom:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <span style={{ fontSize:38, opacity:0.35 }}>{tpl.thumb}</span>
+                </div>
+                <div style={{ position:'absolute', top:8, left:8 }}>
+                  <span style={{ background:'rgba(0,241,232,0.18)', border:'1px solid rgba(0,241,232,0.38)', borderRadius:6, padding:'2px 7px', fontSize:9.5, fontWeight:700, color:'#00F1E8', letterSpacing:0.3 }}>AI Cast</span>
+                </div>
+              </>
+            )}
+            {/* Regular tab: COLLAB BER2 style */}
+            {activeTab!=='AI Cast' && activeTab!=='Cast' && i===0 && (
+              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <div style={{ width:'60%', height:'70%', border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <span style={{ fontSize:28, opacity:0.3 }}>🤔</span>
+                </div>
+              </div>
+            )}
+            {activeTab!=='AI Cast' && activeTab!=='Cast' && i===1 && (
+              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:4 }}>
+                <span style={{ fontSize:20 }}>🎉 😘 🎁</span>
+                <span style={{ fontSize:13, fontWeight:700, textAlign:'center', lineHeight:1.3, padding:'0 8px' }}>Happy birthday<br/>birthday name</span>
+                <span style={{ fontSize:16 }}>🎊 🎈 🎉</span>
+              </div>
+            )}
+            <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'8px', background:'linear-gradient(transparent, rgba(0,0,0,0.82))' }}>
+              <div style={{ fontSize:11, fontWeight:700, lineHeight:1.3 }}>{tpl.title}</div>
+              <div style={{ fontSize:10, color:'rgba(255,255,255,0.55)', marginTop:1 }}>{tpl.count} · {tpl.clips}</div>
+            </div>
+            {(activeTab==='AI Cast'||activeTab==='Cast') && i===0 && (
+              <div style={{ position:'absolute', inset:0, border:'2px solid rgba(0,241,232,0.35)', borderRadius:14, pointerEvents:'none' }}/>
+            )}
+          </div>
+        ))}
+      </div>
+      <BottomTabs active="create"/>
+    </div>
+  );
+};
+
+// ─── Screen 2: AI Cast Entry ──────────────────────────────────────────────────
+const AICastEntry = ({ navigate }) => {
+  const [prompt, setPrompt] = useState('');
+  return (
+    <div className="screen" style={{ color:'#fff' }}>
+      <div className="stage-bg"/>
+      <div className="stage-beam"/>
+      <Sparkles count={14}/>
+      <div style={{ position:'relative', zIndex:5 }}>
+        <StatusBar/>
+        <div style={{ display:'flex', alignItems:'center', padding:'4px 20px 0' }}>
+          <div onClick={()=>navigate('create-home')} style={{ cursor:'pointer', padding:4 }}><Icon name="x" size={22} color="#fff"/></div>
+          <div style={{ flex:1, textAlign:'center' }}>
+            <div style={{ fontWeight:700, fontSize:17 }}>AI Cast</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)', marginTop:1 }}>Powered by Dreamina</div>
+          </div>
+          <div style={{ width:30 }}/>
+        </div>
+      </div>
+      {/* Center content */}
+      <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', position:'relative', zIndex:5, padding:'0 32px' }}>
+        <div style={{ width:72, height:72, borderRadius:'50%', background:'rgba(0,241,232,0.1)', border:'1.5px solid rgba(0,241,232,0.3)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16 }}>
+          <Icon name="ai" size={30} color="#00F1E8"/>
+        </div>
+        <div style={{ textAlign:'center', marginBottom:8 }}>
+          <div style={{ fontWeight:700, fontSize:20, lineHeight:1.3 }}>Cast yourself and your</div>
+          <div style={{ fontWeight:700, fontSize:20, color:'#00F1E8' }}>friends in AI videos</div>
+        </div>
+        <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)', textAlign:'center', lineHeight:1.5 }}>Type a prompt and watch AI place you in any scene</div>
+      </div>
+      {/* Bottom input */}
+      <div style={{ position:'relative', zIndex:5, padding:'0 16px 20px' }}>
+        {/* Co-Create Mode banner */}
+        <div onClick={()=>navigate('co-create-1')} style={{ background:'rgba(0,241,232,0.08)', border:'1.5px solid rgba(0,241,232,0.3)', borderRadius:14, padding:'12px 16px', marginBottom:12, cursor:'pointer', display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:32, height:32, borderRadius:10, background:'rgba(0,241,232,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00F1E8" strokeWidth="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/><circle cx="12" cy="12" r="3" fill="#00F1E8" stroke="none"/></svg>
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:'#00F1E8' }}>Co-Create Mode</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)', marginTop:1 }}>Guide AI step by step — faster, more personal results</div>
+          </div>
+          <Icon name="back" size={16} color="#00F1E8" strokeWidth={2.5}/>
+        </div>
+        <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:16, border:'1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'14px' }}>
+            <Avatar size={32}/>
+            <input value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="Describe your graduation moment…" style={{ flex:1, fontSize:14, lineHeight:1.5, background:'transparent', resize:'none', border:'none', color:'#fff', paddingTop:4 }}/>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 14px 14px' }}>
+            <div style={{ display:'flex', gap:10 }}>
+              <div style={{ width:30,height:30,borderRadius:'50%',background:'rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer' }}><span style={{ fontSize:14 }}>@</span></div>
+              <div style={{ width:30,height:30,borderRadius:'50%',background:'rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer' }}><Icon name="image" size={14} color="#aaa"/></div>
+            </div>
+            <button onClick={()=>navigate('co-create-1')} style={{ background:'#00F1E8', color:'#000', fontWeight:700, fontSize:14, borderRadius:20, padding:'7px 18px', border:'none', cursor:'pointer' }}>Action!</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Co-Create Wrapper (shared state) ────────────────────────────────────────
+const CoCreateFlow = ({ navigate, fromTemplate=false }) => {
+  const [step, setStep] = useState(1);
+  const [choices, setChoices] = useState({ place:'', story:'', degree:'Bachelor', regalia:'Black & Yellow', people:['Me'], tone:'Proud', camera:'Vlog', music:'Celebration', extra:'' });
+
+  const goNext = () => {
+    if (step < 4) setStep(s=>s+1);
+    else navigate('generating', { choices });
+  };
+  const goBack = () => {
+    if (step > 1) setStep(s=>s-1);
+    else navigate(fromTemplate ? 'template-detail' : 'ai-cast-entry');
+  };
+
+  const stepProps = { choices, setChoices, goNext, goBack, step, fromTemplate };
+  return <CoCreateStep {...stepProps}/>;
+};
+
+// ─── Co-Create Steps 1-4 ──────────────────────────────────────────────────────
+const CoCreateStep = ({ choices, setChoices, goNext, goBack, step, fromTemplate }) => {
+  const promptSummary = "Celebrating UM graduation with classmates from different backgrounds.";
+
+  const StepHeader = () => (
+    <div style={{ position:'relative', zIndex:5, padding:'0 20px 0' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:12, paddingTop:4 }}>
+        <div onClick={goBack} style={{ cursor:'pointer', padding:4 }}><Icon name="back" size={22} color="#fff"/></div>
+        <div style={{ flex:1 }}/>
+        <div style={{ display:'flex', gap:6 }}>
+          {[1,2,3,4].map(i=><div key={i} className={`step-dot ${step===i?'active':''}`} style={step<i?{}:{background: step>i?'rgba(0,241,232,0.5)':undefined}}/>)}
+        </div>
+      </div>
+    </div>
+  );
+
+  const PromptBanner = () => (
+    <div style={{ margin:'12px 16px 0', background:'rgba(255,255,255,0.04)', borderRadius:10, padding:'8px 12px', border:'1px solid rgba(255,255,255,0.07)', position:'relative', zIndex:5 }}>
+      {fromTemplate && step===1 && <div style={{ fontSize:10, color:'#00F1E8', marginBottom:4, fontWeight:600 }}>Story template applied · Customize it to make it yours</div>}
+      <div style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.5 }}>"{promptSummary}"</div>
+    </div>
+  );
+
+  const SectionTitle = ({title, sub}) => (
+    <div style={{ padding:'16px 20px 12px', position:'relative', zIndex:5 }}>
+      <div style={{ fontSize:20, fontWeight:800, lineHeight:1.3 }}>{title}</div>
+      {sub && <div style={{ fontSize:13, color:'rgba(255,255,255,0.45)', marginTop:4 }}>{sub}</div>}
+    </div>
+  );
+
+  // ── Step 1: Scene
+  if (step===1) {
+    const places = [
+      { label:'Hill Auditorium', tag:'78% chose this', hot:true },
+      { label:'North Campus Lawn', tag:null },
+      { label:'Central Campus Lawn', tag:null },
+      { label:'Other place', tag:null, isInput:true },
+    ];
+    return (
+      <div className="screen slide-in" style={{ color:'#fff' }}>
+        <div className="stage-bg"/><div className="stage-beam"/><Sparkles count={10}/>
+        <StatusBar/>
+        <StepHeader/>
+        <PromptBanner/>
+        <SectionTitle title="Pick an iconic UM place" sub="Step 1 of 4"/>
+        <div style={{ padding:'0 16px', flex:1, overflowY:'auto', zIndex:5, position:'relative' }} className="scrollable">
+          {places.map((p,i)=>(
+            <div key={i} className={`selectable-card ${choices.place===p.label?'selected':''}`} style={{ marginBottom:10 }}
+              onClick={()=>setChoices(c=>({...c, place:p.label}))}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <div style={{ width:20, height:20, borderRadius:'50%', border:`2px solid ${choices.place===p.label?'#00F1E8':'rgba(255,255,255,0.25)'}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    {choices.place===p.label && <div style={{ width:10, height:10, borderRadius:'50%', background:'#00F1E8' }}/>}
+                  </div>
+                  <span style={{ fontSize:15, fontWeight:600 }}>{p.label}</span>
+                </div>
+                {p.hot && <span style={{ fontSize:11, color:'#00F1E8', background:'rgba(0,241,232,0.1)', padding:'2px 8px', borderRadius:10, fontWeight:600 }}>{p.tag}</span>}
+              </div>
+              {p.isInput && choices.place==='Other place' && (
+                <input placeholder="Type another UM location…" style={{ marginTop:10, width:'100%', fontSize:13, color:'rgba(255,255,255,0.7)', borderTop:'1px solid rgba(255,255,255,0.08)', paddingTop:10 }}/>
+              )}
+            </div>
+          ))}
+        </div>
+        <div style={{ padding:'12px 16px 28px', zIndex:5, position:'relative' }}>
+          <button className="cyan-btn" onClick={goNext} disabled={!choices.place} style={{ opacity: choices.place?1:0.4 }}>Next →</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Step 2: Storyboard
+  if (step===2) {
+    const stories = [
+      { label:'Photos with professors, parents & classmates', tag:'86% chose this', hot:true },
+      { label:'Walking across stage + applause', tag:null },
+      { label:'Group celebration + throwing caps', tag:null },
+      { label:'Other storyboard', tag:null, isInput:true },
+    ];
+    const FrameThumb = ({colors}) => (
+      <div style={{ display:'flex', gap:3, marginTop:8 }}>
+        {colors.map((c,i)=>(
+          <div key={i} style={{ flex:1, height:36, borderRadius:6, background:c, border:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.3)"><polygon points="5,3 19,12 5,21"/></svg>
+          </div>
+        ))}
+      </div>
+    );
+    const thumbSets = [
+      ['linear-gradient(135deg,#1a3040,#0d4060)','linear-gradient(135deg,#0d2040,#1a3060)','linear-gradient(135deg,#102030,#1a3050)'],
+      ['linear-gradient(135deg,#1a2030,#253040)','linear-gradient(135deg,#203040,#152030)','linear-gradient(135deg,#1a2535,#203050)'],
+      ['linear-gradient(135deg,#1a1040,#251050)','linear-gradient(135deg,#201540,#301555)','linear-gradient(135deg,#151040,#201545)'],
+      ['linear-gradient(135deg,#202020,#303030)','linear-gradient(135deg,#252525,#353535)','linear-gradient(135deg,#202020,#2a2a2a)'],
+    ];
+    return (
+      <div className="screen slide-in" style={{ color:'#fff' }}>
+        <div className="stage-bg"/><div className="stage-beam"/><Sparkles count={10}/>
+        <StatusBar/>
+        <StepHeader/>
+        <PromptBanner/>
+        <SectionTitle title="How your moment unfolds" sub="Step 2 of 4 · Choose a storyboard"/>
+        <div style={{ padding:'0 16px', flex:1, overflowY:'auto', zIndex:5, position:'relative' }} className="scrollable">
+          {stories.map((s,i)=>(
+            <div key={i} className={`selectable-card ${choices.story===s.label?'selected':''}`} style={{ marginBottom:10 }}
+              onClick={()=>setChoices(c=>({...c,story:s.label}))}>
+              <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+                <div style={{ display:'flex', alignItems:'flex-start', gap:10, flex:1 }}>
+                  <div style={{ width:20, height:20, borderRadius:'50%', border:`2px solid ${choices.story===s.label?'#00F1E8':'rgba(255,255,255,0.25)'}`, display:'flex', alignItems:'center', justifyContent:'center', marginTop:2, flexShrink:0 }}>
+                    {choices.story===s.label && <div style={{ width:10, height:10, borderRadius:'50%', background:'#00F1E8' }}/>}
+                  </div>
+                  <span style={{ fontSize:14, fontWeight:600, lineHeight:1.4 }}>{s.label}</span>
+                </div>
+                {s.hot && <span style={{ fontSize:11, color:'#00F1E8', background:'rgba(0,241,232,0.1)', padding:'2px 8px', borderRadius:10, fontWeight:600, flexShrink:0, marginLeft:8 }}>{s.tag}</span>}
+              </div>
+              <FrameThumb colors={thumbSets[i]}/>
+              {s.isInput && choices.story==='Other storyboard' && (
+                <input placeholder="Describe another storyline…" style={{ marginTop:10, width:'100%', fontSize:13, color:'rgba(255,255,255,0.7)', borderTop:'1px solid rgba(255,255,255,0.08)', paddingTop:10 }}/>
+              )}
+            </div>
+          ))}
+        </div>
+        <div style={{ padding:'12px 16px 28px', zIndex:5, position:'relative' }}>
+          <button className="cyan-btn" onClick={goNext} disabled={!choices.story} style={{ opacity:choices.story?1:0.4 }}>Next →</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Step 3: Details
+  if (step===3) {
+    const Toggle = ({ label, options, value, onChange }) => (
+      <div style={{ marginBottom:18 }}>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginBottom:8, fontWeight:500, textTransform:'uppercase', letterSpacing:0.8 }}>{label}</div>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+          {options.map(o=>(
+            <div key={o} onClick={()=>onChange(o)} style={{ padding:'8px 16px', borderRadius:20, background: value===o ? '#00F1E8' : 'rgba(255,255,255,0.06)', color: value===o ? '#000':'#fff', fontSize:13, fontWeight: value===o?700:400, border: value===o ? 'none':'1px solid rgba(255,255,255,0.1)', cursor:'pointer', transition:'all 0.18s' }}>{o}</div>
+          ))}
+        </div>
+      </div>
+    );
+    const MultiToggle = ({ label, options, value, onChange }) => (
+      <div style={{ marginBottom:18 }}>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginBottom:8, fontWeight:500, textTransform:'uppercase', letterSpacing:0.8 }}>{label}</div>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+          {options.map(o=>{
+            const sel = value.includes(o);
+            return (
+              <div key={o} onClick={()=>onChange(sel ? value.filter(x=>x!==o) : [...value, o])} style={{ padding:'8px 16px', borderRadius:20, background: sel ? 'rgba(0,241,232,0.15)':'rgba(255,255,255,0.06)', color: sel ? '#00F1E8':'#fff', fontSize:13, fontWeight: sel?600:400, border: sel ? '1.5px solid rgba(0,241,232,0.5)':'1px solid rgba(255,255,255,0.1)', cursor:'pointer', transition:'all 0.18s' }}>{o}</div>
+            );
+          })}
+        </div>
+      </div>
+    );
+    return (
+      <div className="screen slide-in" style={{ color:'#fff' }}>
+        <div className="stage-bg"/><div className="stage-beam"/><Sparkles count={10}/>
+        <StatusBar/>
+        <StepHeader/>
+        <PromptBanner/>
+        <SectionTitle title="Confirm your regalia" sub="Step 3 of 4 · Help AI get the details right"/>
+        <div style={{ padding:'0 16px', flex:1, overflowY:'auto', zIndex:5, position:'relative' }} className="scrollable">
+          <Toggle label="Degree" options={['Bachelor','Master','PhD']} value={choices.degree} onChange={v=>setChoices(c=>({...c,degree:v}))}/>
+          <Toggle label="Regalia Color" options={['Black & Yellow','Navy & Yellow','Other']} value={choices.regalia} onChange={v=>setChoices(c=>({...c,regalia:v}))}/>
+          <MultiToggle label="People Included" options={['Me','Classmates','Parents','Professors']} value={choices.people} onChange={v=>setChoices(c=>({...c,people:v}))}/>
+          <div style={{ marginBottom:18 }}>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginBottom:8, fontWeight:500, textTransform:'uppercase', letterSpacing:0.8 }}>Any details AI should get right?</div>
+            <textarea value={choices.extra} onChange={e=>setChoices(c=>({...c,extra:e.target.value}))} placeholder="e.g. I wear glasses, my regalia has a blue hood…" rows={3} style={{ width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:12, padding:'12px', fontSize:13, color:'#fff', resize:'none', lineHeight:1.5 }}/>
+          </div>
+        </div>
+        <div style={{ padding:'12px 16px 28px', zIndex:5, position:'relative' }}>
+          <button className="cyan-btn" onClick={goNext}>Next →</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Step 4: Make it yours
+  const Toggle4 = ({ label, options, value, onChange }) => (
+    <div style={{ marginBottom:20 }}>
+      <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginBottom:8, fontWeight:500, textTransform:'uppercase', letterSpacing:0.8 }}>{label}</div>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {options.map(o=>(
+          <div key={o} onClick={()=>onChange(o)} style={{ padding:'8px 16px', borderRadius:20, background: value===o ? '#00F1E8':'rgba(255,255,255,0.06)', color: value===o?'#000':'#fff', fontSize:13, fontWeight:value===o?700:400, border: value===o?'none':'1px solid rgba(255,255,255,0.1)', cursor:'pointer', transition:'all 0.18s' }}>{o}</div>
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <div className="screen slide-in" style={{ color:'#fff' }}>
+      <div className="stage-bg"/><div className="stage-beam"/><Sparkles count={10}/>
+      <StatusBar/>
+      <StepHeader/>
+      <PromptBanner/>
+      <SectionTitle title="Make it yours" sub="Step 4 of 4 · Final creative direction"/>
+      <div style={{ padding:'0 16px', flex:1, overflowY:'auto', zIndex:5, position:'relative' }} className="scrollable">
+        <Toggle4 label="Tone" options={['Proud','Emotional','Funny','Cinematic']} value={choices.tone} onChange={v=>setChoices(c=>({...c,tone:v}))}/>
+        <Toggle4 label="Camera Style" options={['Vlog','Slow motion','Documentary','Film-like']} value={choices.camera} onChange={v=>setChoices(c=>({...c,camera:v}))}/>
+        <Toggle4 label="Music Vibe" options={['Celebration','Warm','Campus nostalgia']} value={choices.music} onChange={v=>setChoices(c=>({...c,music:v}))}/>
+        <div style={{ marginBottom:18 }}>
+          <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginBottom:8, fontWeight:500, textTransform:'uppercase', letterSpacing:0.8 }}>Anything else to clarify?</div>
+          <textarea placeholder="e.g. End on a group hug, use a golden hour feel…" rows={3} style={{ width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:12, padding:'12px', fontSize:13, color:'#fff', resize:'none', lineHeight:1.5 }}/>
+        </div>
+      </div>
+      <div style={{ padding:'12px 16px 28px', zIndex:5, position:'relative' }}>
+        <button className="cyan-btn" onClick={goNext}>Generate</button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Screen 7: Generating ─────────────────────────────────────────────────────
+const Generating = ({ navigate, choices={} }) => {
+  const [progress, setProgress] = useState(0);
+  const [stageIdx, setStageIdx] = useState(0);
+  const stages = ['Style locked','Storyboard rendering','Motion pass','Final video'];
+  const target = useRef(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(p => {
+        const next = Math.min(p + (Math.random() * 4 + 1.5), 100);
+        if (next >= 100) { clearInterval(interval); setTimeout(()=>navigate('final-result', { choices }), 600); }
+        return next;
+      });
+    }, 120);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (progress > 80) setStageIdx(3);
+    else if (progress > 55) setStageIdx(2);
+    else if (progress > 25) setStageIdx(1);
+    else setStageIdx(0);
+  }, [progress]);
+
+  const summaryChips = [
+    choices.place || 'Hill Auditorium',
+    choices.story ? 'Group Celebration' : 'Group Celebration',
+    choices.degree || 'Master',
+    choices.regalia || 'Black & Yellow',
+    choices.tone || 'Emotional',
+  ];
+
+  return (
+    <div className="screen" style={{ color:'#fff' }}>
+      <div className="stage-bg"/><div className="stage-beam"/><Sparkles count={16}/>
+      <div style={{ position:'relative', zIndex:5 }}>
+        <StatusBar/>
+        <div style={{ display:'flex', alignItems:'center', padding:'4px 20px 0' }}>
+          <div onClick={()=>navigate('co-create-1')} style={{ cursor:'pointer', padding:4, opacity:0.5 }}><Icon name="back" size={22} color="#fff"/></div>
+          <div style={{ flex:1, textAlign:'center' }}>
+            <div style={{ fontWeight:700, fontSize:16 }}>Co-Create Mode</div>
+          </div>
+          <div style={{ width:30 }}/>
+        </div>
+      </div>
+      {/* Main content */}
+      <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', zIndex:5, position:'relative', padding:'0 24px' }}>
+        {/* Avatar with glow */}
+        <div style={{ position:'relative', marginBottom:24 }}>
+          <div style={{ width:90, height:90, borderRadius:'50%', background:'rgba(0,241,232,0.08)', border:`2px solid rgba(0,241,232,${0.2+progress/300})`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 0 ${20+progress/3}px rgba(0,241,232,0.15)` }}>
+            <Avatar size={76}/>
+          </div>
+          {progress<100 && <div style={{ position:'absolute',bottom:-4,right:-4,width:24,height:24,borderRadius:'50%',background:'#00F1E8',display:'flex',alignItems:'center',justifyContent:'center' }}>
+            <div style={{ width:12,height:12,border:'2px solid #000',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite' }}/>
+          </div>}
+        </div>
+        {/* Progress */}
+        <div style={{ fontSize:52, fontWeight:800, color:'#fff', letterSpacing:-2, marginBottom:4 }}>{Math.floor(progress)}%</div>
+        <div style={{ width:'100%', height:4, background:'rgba(255,255,255,0.08)', borderRadius:2, marginBottom:10, overflow:'hidden' }}>
+          <div style={{ height:'100%', width:`${progress}%`, background:'linear-gradient(90deg,#00F1E8,rgba(0,241,232,0.6))', borderRadius:2, transition:'width 0.15s', boxShadow:'0 0 8px rgba(0,241,232,0.4)' }}/>
+        </div>
+        <div style={{ fontSize:15, fontWeight:600, marginBottom:4 }}>Rendering your Co-Create Cast…</div>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginBottom:24 }}>About {Math.max(0,Math.round((100-progress)*0.4))}s left</div>
+        {/* Stages */}
+        <div style={{ width:'100%', background:'rgba(255,255,255,0.04)', borderRadius:14, padding:'12px 16px', marginBottom:16, border:'1px solid rgba(255,255,255,0.07)' }}>
+          {stages.map((s,i)=>(
+            <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'6px 0', borderBottom: i<stages.length-1?'1px solid rgba(255,255,255,0.05)':'' }}>
+              <div style={{ width:20, height:20, borderRadius:'50%', background: i<stageIdx?'#00F1E8': i===stageIdx?'rgba(0,241,232,0.2)':'rgba(255,255,255,0.06)', border: i===stageIdx?'1.5px solid #00F1E8':'none', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                {i<stageIdx && <Icon name="check" size={11} color="#000" strokeWidth={3}/>}
+                {i===stageIdx && <div style={{ width:8,height:8,borderRadius:'50%',background:'#00F1E8',animation:'pulse 1s ease-in-out infinite' }}/>}
+              </div>
+              <span style={{ fontSize:13, color: i<=stageIdx?'#fff':'rgba(255,255,255,0.3)', fontWeight: i===stageIdx?600:400 }}>{s}</span>
+              {i===stageIdx && <span style={{ marginLeft:'auto', fontSize:11, color:'#00F1E8' }}>In progress…</span>}
+              {i<stageIdx && <span style={{ marginLeft:'auto', fontSize:11, color:'rgba(0,241,232,0.6)' }}>Done</span>}
+            </div>
+          ))}
+        </div>
+        {/* Choice chips */}
+        <div style={{ display:'flex', flexWrap:'wrap', gap:6, justifyContent:'center', marginBottom:12 }}>
+          {summaryChips.map((c,i)=><span key={i} className="chip">{c}</span>)}
+        </div>
+        <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', textAlign:'center', lineHeight:1.5 }}>Your choices help AI understand your intent faster.</div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Screen 8: Final Video Result ─────────────────────────────────────────────
+const FinalResult = ({ navigate, choices={} }) => {
+  const summaryChips = [
+    choices.place || 'Hill Auditorium',
+    'Group celebration',
+    choices.degree || 'Master',
+    choices.regalia || 'Black & Yellow',
+    choices.tone || 'Emotional',
+  ];
+  const toolRail = ['AI Cast','Edit','Templates','Text','Stickers','Effects','Filters','Voice','Captions'];
+  const toolIcons = ['ai','edit','effects','text','sticker','effects','filter','mic','caption'];
+
+  return (
+    <div className="screen" style={{ background:'#000', color:'#fff' }}>
+      {/* Video BG */}
+      <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg, #1a3a20 0%, #2d5a30 20%, #3d7040 50%, #2a5a35 80%, #1a3a25 100%)', zIndex:0 }}/>
+      <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(100,160,80,0.3) 0%, transparent 70%)', zIndex:1 }}/>
+      {/* Co-Create label */}
+      <div style={{ position:'absolute', top:80, left:16, zIndex:10 }}>
+        <div style={{ background:'rgba(0,241,232,0.15)', border:'1px solid rgba(0,241,232,0.35)', borderRadius:8, padding:'4px 10px', fontSize:11, fontWeight:700, color:'#00F1E8' }}>Generated with Co-Create Mode</div>
+      </div>
+      {/* Choice chips */}
+      <div style={{ position:'absolute', top:112, left:16, zIndex:10, display:'flex', flexDirection:'column', gap:5, maxWidth:200 }}>
+        <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+          {summaryChips.map((c,i)=><span key={i} className="chip" style={{ fontSize:10 }}>{c}</span>)}
+        </div>
+      </div>
+      {/* Top bar */}
+      <div style={{ position:'absolute', top:0, left:0, right:0, zIndex:10 }}>
+        <StatusBar/>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 16px 8px' }}>
+          <div onClick={()=>navigate('create-home')} style={{ cursor:'pointer', background:'rgba(0,0,0,0.4)', borderRadius:'50%', width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center' }}><Icon name="back" size={20} color="#fff"/></div>
+          {/* Music pill */}
+          <div style={{ background:'rgba(0,0,0,0.5)', borderRadius:20, padding:'6px 14px', display:'flex', alignItems:'center', gap:6, backdropFilter:'blur(8px)', border:'1px solid rgba(255,255,255,0.12)' }}>
+            <Icon name="music" size={12} color="#fff"/>
+            <span style={{ fontSize:12, fontWeight:500 }}>Je te laisser…</span>
+            <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)' }}>×</span>
+          </div>
+          <div style={{ background:'rgba(0,0,0,0.4)', borderRadius:'50%', width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center', cursor:'pointer' }}><Icon name="settings" size={18} color="#fff"/></div>
+        </div>
+      </div>
+      {/* Right tool rail */}
+      <div style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', zIndex:10, display:'flex', flexDirection:'column', gap:16, alignItems:'center' }}>
+        {toolRail.map((label,i)=>(
+          <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, cursor:'pointer' }}>
+            <div style={{ width:40,height:40,borderRadius:'50%',background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(8px)', border:'1px solid rgba(255,255,255,0.1)' }}>
+              {i===0 ? <Icon name="ai" size={18} color="#00F1E8"/> : <Icon name={toolIcons[i]||'wand'} size={18} color="#fff"/>}
+            </div>
+            <span style={{ fontSize:9, color:'rgba(255,255,255,0.8)', fontWeight:500 }}>{label}</span>
+          </div>
+        ))}
+      </div>
+      {/* Bottom area */}
+      <div style={{ position:'absolute', bottom:0, left:0, right:0, zIndex:10, padding:'12px 16px 28px' }}>
+        {/* Quick actions */}
+        <div style={{ display:'flex', gap:8, marginBottom:12, justifyContent:'flex-start' }}>
+          {['Edit details','Regenerate one part','Save to Drafts'].map((a,i)=>(
+            <div key={i} style={{ background:'rgba(0,0,0,0.55)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:16, padding:'6px 12px', fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.85)', cursor:'pointer', backdropFilter:'blur(8px)', whiteSpace:'nowrap' }}>{a}</div>
+          ))}
+        </div>
+        <button className="cyan-btn" style={{ background:'#00F1E8' }}>Next</button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Screen 9: Template Detail ────────────────────────────────────────────────
+const TemplateDetail = ({ navigate }) => (
+  <div className="screen" style={{ background:'#080c14', color:'#fff' }}>
+    {/* Preview area */}
+    <div style={{ position:'relative', flex:1, maxHeight:440, overflow:'hidden' }}>
+      <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg, #0d2a3a 0%, #1a4a5c 30%, #0d3040 70%, #080c14 100%)' }}/>
+      <Sparkles count={8}/>
+      <div style={{ position:'relative', zIndex:5 }}>
+        <StatusBar time="22:17"/>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 16px 8px' }}>
+          <div onClick={()=>navigate('create-home')} style={{ cursor:'pointer', padding:4 }}><Icon name="back" size={22} color="#fff"/></div>
+          <div style={{ cursor:'pointer' }}><Icon name="search" size={22} color="#fff"/></div>
+        </div>
+      </div>
+      {/* Center preview */}
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:280, position:'relative', zIndex:5 }}>
+        <div style={{ width:120,height:180,borderRadius:14,background:'linear-gradient(135deg,#0d3a50,#1a5a70)',border:'1px solid rgba(0,241,232,0.25)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontSize:28, marginBottom:6 }}>🎓</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.6)', lineHeight:1.4 }}>UM Graduation<br/>Story</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {/* Info panel */}
+    <div style={{ padding:'16px 20px 0', flex:1, overflowY:'auto' }} className="scrollable">
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+        <div>
+          <div style={{ fontSize:20, fontWeight:800, lineHeight:1.3 }}>UM Graduation Story</div>
+          <div style={{ fontSize:13, color:'rgba(255,255,255,0.45)', marginTop:4 }}>21.5K videos · 12 clips</div>
+          <div style={{ fontSize:12, color:'rgba(255,255,255,0.35)', marginTop:2 }}>By AI Cast Stories</div>
+        </div>
+        <div style={{ cursor:'pointer', padding:4 }}><Icon name="bookmark" size={22} color="rgba(255,255,255,0.5)"/></div>
+      </div>
+      {/* Tags */}
+      <div style={{ display:'flex', gap:6, marginTop:12, flexWrap:'wrap' }}>
+        {['AI Cast','Graduation','Storyline','University'].map(t=>(
+          <span key={t} style={{ background:'rgba(255,255,255,0.07)', borderRadius:8, padding:'4px 10px', fontSize:11, color:'rgba(255,255,255,0.6)' }}>{t}</span>
+        ))}
+      </div>
+      {/* Story structure */}
+      <div style={{ marginTop:16, background:'rgba(255,255,255,0.04)', borderRadius:14, padding:'12px 16px', border:'1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', fontWeight:600, textTransform:'uppercase', letterSpacing:0.8, marginBottom:10 }}>Story Structure</div>
+        {['Iconic campus place','Graduation moment','Regalia details','Personal tone'].map((s,i)=>(
+          <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom: i<3?'1px solid rgba(255,255,255,0.05)':'' }}>
+            <div style={{ width:22,height:22,borderRadius:'50%',background:'rgba(0,241,232,0.12)',border:'1px solid rgba(0,241,232,0.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'#00F1E8',flexShrink:0 }}>{i+1}</div>
+            <span style={{ fontSize:13, color:'rgba(255,255,255,0.7)' }}>{s}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+    {/* CTAs */}
+    <div style={{ padding:'12px 16px 28px' }}>
+      <button className="cyan-btn" onClick={()=>navigate('co-create-1-template')} style={{ marginBottom:10 }}>Use this story</button>
+      <button style={{ width:'100%', height:46, background:'transparent', border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:28, color:'rgba(255,255,255,0.7)', fontSize:15, fontWeight:600, cursor:'pointer' }}>See variations</button>
+    </div>
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ROOT APP
+// ═══════════════════════════════════════════════════════════════════════════════
+const App = () => {
+  const initScreen = new URLSearchParams(window.location.search).get('screen') || 'create-home';
+  const [screen, setScreen] = useState(initScreen);
+  const [screenData, setScreenData] = useState({});
+
+  const navigate = useCallback((to, data={}) => {
+    setScreenData(data);
+    setScreen(to);
+  }, []);
+
+  const renderScreen = () => {
+    switch(screen) {
+      case 'create-home':       return <CreateHome navigate={navigate}/>;
+      case 'ai-cast-entry':     return <AICastEntry navigate={navigate}/>;
+      case 'co-create-1':       return <CoCreateFlow navigate={navigate} fromTemplate={false}/>;
+      case 'co-create-1-template': return <CoCreateFlow navigate={navigate} fromTemplate={true}/>;
+      case 'generating':        return <Generating navigate={navigate} choices={screenData.choices}/>;
+      case 'final-result':      return <FinalResult navigate={navigate} choices={screenData.choices}/>;
+      case 'template-detail':   return <TemplateDetail navigate={navigate}/>;
+      default:                  return <CreateHome navigate={navigate}/>;
+    }
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:24 }}>
+<div style={{ display:'flex', gap:40, alignItems:'flex-start', flexWrap:'wrap', justifyContent:'center' }}>
+        {/* Phone */}
+        <div className="phone-shell">
+          {renderScreen()}
+        </div>
+        {/* Flow map sidebar */}
+        <div style={{ color:'rgba(255,255,255,0.5)', fontSize:12, lineHeight:2, maxWidth:220, paddingTop:60 }}>
+          <div style={{ fontWeight:700, color:'rgba(255,255,255,0.7)', marginBottom:8, fontSize:13, letterSpacing:0.5 }}>FLOW 1</div>
+          {[
+            ['create-home','Create Home'],
+            ['ai-cast-entry','AI Cast Entry'],
+            ['co-create-1','Co-Create Steps 1–4'],
+            ['generating','Generating…'],
+            ['final-result','Final Result'],
+          ].map(([s,l])=>(
+            <div key={s} onClick={()=>navigate(s)} style={{ cursor:'pointer', display:'flex', alignItems:'center', gap:8, padding:'2px 0' }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background: screen===s?'#00F1E8':'rgba(255,255,255,0.2)', flexShrink:0, transition:'all 0.2s' }}/>
+              <span style={{ color: screen===s?'#00F1E8':'rgba(255,255,255,0.45)', transition:'color 0.2s' }}>{l}</span>
+            </div>
+          ))}
+          <div style={{ fontWeight:700, color:'rgba(255,255,255,0.7)', marginBottom:8, marginTop:16, fontSize:13, letterSpacing:0.5 }}>FLOW 2</div>
+          {[
+            ['template-detail','Template Detail'],
+            ['co-create-1-template','Co-Create (template)'],
+          ].map(([s,l])=>(
+            <div key={s} onClick={()=>navigate(s)} style={{ cursor:'pointer', display:'flex', alignItems:'center', gap:8, padding:'2px 0' }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background: screen===s?'#00F1E8':'rgba(255,255,255,0.2)', flexShrink:0 }}/>
+              <span style={{ color: screen===s?'#00F1E8':'rgba(255,255,255,0.45)' }}>{l}</span>
+            </div>
+          ))}
+          <div style={{ marginTop:24, padding:'12px', background:'rgba(0,241,232,0.05)', borderRadius:10, border:'1px solid rgba(0,241,232,0.1)', color:'rgba(0,241,232,0.6)', fontSize:11, lineHeight:1.7 }}>
+            Click any screen to jump<br/>or tap through the flows<br/>inside the phone.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
